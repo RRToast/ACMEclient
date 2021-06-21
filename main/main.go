@@ -18,9 +18,8 @@ type Message struct {
 
 func main() {
 	println("start")
-	combine()
-
 	nonce := getNonce()
+	combine(nonce)
 
 	// Quelle: https://golang.org/pkg/encoding/base64/
 	// todo: prüfen was "alg" ist und ob es bleiben kann / jwk erstellen

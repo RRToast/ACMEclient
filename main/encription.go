@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/square/go-jose.v2"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
@@ -33,7 +34,7 @@ type Header struct {
 	KeyID string `json:"kid,omitempty"`
 }
 
-func combine() {
+func combine(nonce string) {
 	println("Encryption start")
 
 	addNewTrusedCert()
@@ -45,6 +46,10 @@ func combine() {
 	println(privateKey)
 	// Instantiate a signer using RSASSA-PSS (SHA512) with the given private key.
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.PS512, Key: privateKey}, nil)
+	value := jose.JSONWebKey{Key: privateKey.Public()}
+	testHeader := jose.Header{JSONWebKey: &value, Algorithm: string(jose.PS512), Nonce: nonce, ExtraHeaders: map[jose.HeaderKey]interface{}{"url": "https://localhost:14000/sign-me-up"}}
+	// Herr Schreck fragen ...
+
 	if err != nil {
 		panic(err)
 	}
@@ -55,6 +60,7 @@ func combine() {
 	// indicate a problem in an underlying cryptographic primitive.
 	var payload = []byte("Lorem ipsum dolor sit amet")
 	object, err := signer.Sign(payload)
+	object2, err := signer.Options(jose.SignerOptions.with)
 	if err != nil {
 		panic(err)
 	}
