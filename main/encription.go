@@ -4,17 +4,21 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
+	"flag"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	"gopkg.in/square/go-jose.v2"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
 const (
-	localCertFile = "Downloads/root20062021"
+	localCertFile = "ServerRootCert"
 )
 
 // Quelle: https://pkg.go.dev/gopkg.in/square/go-jose.v2
@@ -37,7 +41,12 @@ type Header struct {
 func combine(nonce string) {
 	println("Encryption start")
 
-	addNewTrusedCert()
+	// Get Root Certifikate
+	fileURL := "https://localhost:15000/roots/0"
+	error := DownloadFile("ServerRootCert", fileURL)
+	if error != nil {
+		panic(error)
+	}
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -48,6 +57,11 @@ func combine(nonce string) {
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.PS512, Key: privateKey}, nil)
 	value := jose.JSONWebKey{Key: privateKey.Public()}
 	testHeader := jose.Header{JSONWebKey: &value, Algorithm: string(jose.PS512), Nonce: nonce, ExtraHeaders: map[jose.HeaderKey]interface{}{"url": "https://localhost:14000/sign-me-up"}}
+	sig := []jose.Signature{jose.Signature{Protected: testHeader}} //evtl Signature?
+	jwsig := jose.JSONWebSignature{Signatures: sig}
+
+	fmt.Printf("jwsig: %v\n", jwsig)
+
 	// Herr Schreck fragen ...
 
 	if err != nil {
@@ -59,24 +73,17 @@ func combine(nonce string) {
 	// which can then be serialized for output afterwards. An error would
 	// indicate a problem in an underlying cryptographic primitive.
 	var payload = []byte("Lorem ipsum dolor sit amet")
+	signer.Options()
 	object, err := signer.Sign(payload)
-	object2, err := signer.Options(jose.SignerOptions.with)
 	if err != nil {
 		panic(err)
 	}
 
-	// Serialize the encrypted object using the full serialization format.
-	// Alternatively you can also use the compact format here by calling
-	// object.CompactSerialize() instead.
 	serialized := object.FullSerialize()
 	println("Payload: ", serialized)
 	// ----------------------------------------------------------------------------------------------------------------------------
-	/* 	fileURL := "https://localhost:15000/roots/0"
-	   	error := DownloadFile("0", fileURL)
-	   	   	if error != nil {
-	   	   		panic(err)
-	   	   	} */
-	/*insecure := flag.Bool("insecure-ssl", false, "Accept/Ignore all server SSL certificates")
+
+	insecure := flag.Bool("insecure-ssl", false, "Accept/Ignore all server SSL certificates")
 	flag.Parse()
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
@@ -86,6 +93,7 @@ func combine(nonce string) {
 	if err != nil {
 		log.Fatalf("Failed to append %q to RootCAs: %v", localCertFile, err)
 	}
+	println(string(certs))
 
 	// Append our cert to the system pool
 	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
@@ -98,12 +106,12 @@ func combine(nonce string) {
 		RootCAs:            rootCAs,
 	}
 	tr := &http.Transport{TLSClientConfig: config}
-	client := &http.Client{Transport: tr} */
-	// ----------------------------------------------------------------------------------------------------------------------------
-	tlsConfig := &tls.Config{}
-	tlsConfig.InsecureSkipVerify = true
-	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
+	// ----------------------------------------------------------------------------------------------------------------------------
+	/* 	tlsConfig := &tls.Config{}
+	   	tlsConfig.InsecureSkipVerify = true
+	tr := &http.Transport{TLSClientConfig: config}
+	client := &http.Client{Transport: tr} */
 
 	req, err := http.NewRequest("POST", "https://localhost:14000/sign-me-up", strings.NewReader(serialized))
 	req.Header.Add("Content-Type", "application/jose+json")
@@ -135,47 +143,33 @@ func combine(nonce string) {
 	println("Encription finished")
 }
 
-func addNewTrusedCert() {
-}
-
 func DownloadFile(filepath string, url string) error {
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
 	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
-	// Get the data
 
+	// Get the data
 	test := ""
 	haus := strings.NewReader(test)
 	req, err := http.NewRequest("GET", url, haus)
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		if err.Error() != "Get \"https://localhost:15000/roots/0\": x509: certificate signed by unknown authority" {
+			return err
+		}
 	}
 	defer resp.Body.Close()
-	println("HTTP result status: ", resp.Status)
-	println("HTTP result body: ", resp.Body)
-	println("haus = ", haus)
-	println("test = ", test)
-	/* 	resp, err := http.Get(url)
-	   	tlsConfig.do
-	   	if err != nil {
-	   		if err.Error() != "Get \"https://localhost:15000/roots/0\": x509: certificate signed by unknown authority" {
-	   			return err
-	   		}
-	   	} */
-
+	println("Get Root Certifikate HTTP status: ", resp.Status)
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
-
-	println("Wir sind hier")
-
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
-	return err
 
+	println("Get Root Certifikate completed")
+	return err
 }
