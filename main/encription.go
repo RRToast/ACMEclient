@@ -79,7 +79,17 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		panic(err)
 	}
 	println("Account created")
-	return string(m["orders"])
+	test := string(m["orders"])
+	return trimQuote(test)
+}
+func trimQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+	return s
 }
 
 type identifier struct {
@@ -89,7 +99,6 @@ type identifier struct {
 
 func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	println(order_url)
 	signerOpts.WithHeader("kid", order_url)
 	signerOpts.WithHeader("url", "https://localhost:14000/order-plz")
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
