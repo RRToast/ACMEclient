@@ -12,6 +12,8 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 )
 
+var test = ""
+
 type dummyNonceSource struct{}
 
 func (n dummyNonceSource) Nonce() (string, error) {
@@ -24,8 +26,22 @@ func (n dummyNonceSource) Nonce() (string, error) {
 	if err != nil {
 		panic(err)
 	}
+	if test != "" {
+		println("Hallo eyyy:", test)
+		return test, nil
+	}
 	ua := res.Header.Get("Replay-Nonce")
 	return ua, nil
+}
+
+func trimQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+	return s
 }
 
 func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
@@ -71,6 +87,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		println(err.Error())
 		panic(err)
 	}
+	println("HTTP result header:", string(resp.Header.Get("Location")))
 	println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
@@ -79,22 +96,13 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		panic(err)
 	}
 	println("Account created")
-	test := string(m["orders"])
-	return trimQuote(test)
-}
-func trimQuote(s string) string {
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-	return s
+	test = resp.Header.Get("Replay-Nonce")
+	return resp.Header.Get("Location")
 }
 
-type identifier struct {
-	key   string
-	value string
+type Identifier struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
@@ -105,7 +113,10 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 	if err != nil {
 		panic(err)
 	}
-	testinator := map[string]string{"type": "dns", "value": "www.example.org"}
+
+	//testinator := map[string]string{"type": "dns", "value": "www.example.org"}
+	testinator := []Identifier{{Type: "dns", Value: "www.example.org"}}
+	//	ente, err := json.Marshal(testinator)
 	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00"}
 	byts, _ := json.Marshal(payload)
 	fmt.Println(string(byts))
