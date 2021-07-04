@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -27,7 +26,6 @@ func (n dummyNonceSource) Nonce() (string, error) {
 		panic(err)
 	}
 	if test != "" {
-		println("Hallo eyyy:", test)
 		return test, nil
 	}
 	ua := res.Header.Get("Replay-Nonce")
@@ -52,13 +50,11 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 	if err != nil {
 		panic(err)
 	}
-	println("test")
 
 	var testor [1]string
 	testor[0] = "mailto:test.test@test.de"
 	payload := map[string]interface{}{"termsOfServiceAgreed": true, "contact": testor}
 	byts, _ := json.Marshal(payload)
-	fmt.Println(string(byts))
 	signer.Options()
 	object, err := signer.Sign(byts)
 	if err != nil {
@@ -87,8 +83,8 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		println(err.Error())
 		panic(err)
 	}
-	println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	// println("HTTP result header:", string(resp.Header.Get("Location")))
+	// println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -114,12 +110,15 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 		panic(err)
 	}
 
-	//testinator := map[string]string{"type": "dns", "value": "www.example.org"}
-	testinator := []Identifier{{Type: "dns", Value: "www.example.org"}}
-	//	ente, err := json.Marshal(testinator)
+	AkValue, EkValue := getAttestAndEndorseKey()
+	Ak, _ := AkValue.Marshal()
+	AkString := string(Ak)
+	EKString := string(EkValue.Certificate.Raw)
+	AkEkString := AkString + " " + EKString
+
+	testinator := []Identifier{{Type: "ek", Value: AkEkString}}
 	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00"}
 	byts, _ := json.Marshal(payload)
-	fmt.Println(string(byts))
 	signer.Options()
 	object, err := signer.Sign(byts)
 	if err != nil {
@@ -127,7 +126,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 	}
 
 	serialized := object.FullSerialize()
-	println("Payload: ", serialized)
+	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
