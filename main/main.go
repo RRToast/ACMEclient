@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-// Quelle: https://blog.golang.org/json
 type Message struct {
 	alg   string
 	jwk   string
@@ -32,7 +31,7 @@ func getNonce() string {
 	}
 	client := &http.Client{Transport: tr}
 
-	res, err := client.Head("https://localhost:14000/nonce-plz")
+	res, err := client.Head("https://192.168.1.5:14000/nonce-plz")
 	if err != nil {
 		panic(err)
 	}
