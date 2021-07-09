@@ -98,7 +98,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 
 type Identifier struct {
 	Type  string `json:"type"`
-	Value string `json:"value"`
+	Value interface{}
 }
 
 func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
@@ -111,13 +111,13 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 	}
 
 	AkValue, EkValue := getAttestAndEndorseKey()
-	Ak, _ := AkValue.Marshal()
-	AkString := string(Ak)
-	EKString := string(EkValue.Certificate.Raw)
-	AkEkString := AkString + " " + EKString
+	/* test, _ := AkValue.Marshal()
+		akhex := hex.EncodeToString(test)
+	  	println(akhex)
+	  	akByte, _ := hex.DecodeString(akhex) */
 
-	testinator := []Identifier{{Type: "ek", Value: AkEkString}}
-	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00"}
+	testinator := []Identifier{{Type: "ek", Value: "EkValue"}}
+	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00", "Ekvalues": EkValue, "Akvalues": AkValue}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
 	object, err := signer.Sign(byts)
