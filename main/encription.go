@@ -3,7 +3,9 @@ package main
 import (
 	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"io"
 	"net/http"
 	"strings"
@@ -110,14 +112,23 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 		panic(err)
 	}
 
-	AkValue, EkValue := getAttestAndEndorseKey()
-	/* test, _ := AkValue.Marshal()
-		akhex := hex.EncodeToString(test)
-	  	println(akhex)
-	  	akByte, _ := hex.DecodeString(akhex) */
+	EkValue := getAttestAndEndorseKey()
+	// get EkValue test
+	pubkey_bytes, err := x509.MarshalPKIXPublicKey(EkValue.Public)
+	if err != nil {
+		panic(err)
+	}
+	pubkey_pem := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: pubkey_bytes,
+		},
+	)
+	println(string(pubkey_pem))
+	// test end
 
 	testinator := []Identifier{{Type: "ek", Value: "EkValue"}}
-	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00", "Ekvalues": EkValue, "Akvalues": AkValue}
+	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00", "Ekvalues": EkValue}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
 	object, err := signer.Sign(byts)
