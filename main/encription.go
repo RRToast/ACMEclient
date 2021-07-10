@@ -160,6 +160,60 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (authorization
 	pos = strings.Index(z, "\"")
 	z = z[:pos]
 	println(z)
-	return "authorization url platzhalter"
+	return z
+
+}
+
+func authChallenge(privateKey *rsa.PrivateKey, authorization_url string) {
+	// GET as POST request
+	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
+	signerOpts.WithHeader("kid", authorization_url)
+	signerOpts.WithHeader("url", authorization_url)
+	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	payload := map[string]interface{}{"": ""}
+	byts, _ := json.Marshal(payload)
+	signer.Options()
+	object, err := signer.Sign(byts)
+	if err != nil {
+		panic(err)
+	}
+
+	serialized := object.FullSerialize()
+	// println("Payload: ", serialized)
+
+	tlsConfig := &tls.Config{}
+	tlsConfig.InsecureSkipVerify = true
+	tr := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: tr}
+
+	req, err := http.NewRequest("POST", authorization_url, strings.NewReader(serialized))
+	req.Header.Add("Content-Type", "application/jose+json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	defer resp.Body.Close()
+	println("HTTP result status: ", resp.Status)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	println("HTTP result header:", string(resp.Header.Get("Location")))
+	println("HTTP result body: ", string(body))
+	m := make(map[string]json.RawMessage)
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	println("Auth Challenge erhalten")
+	test = resp.Header.Get("Replay-Nonce")
 
 }
