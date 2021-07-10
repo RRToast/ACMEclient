@@ -1,10 +1,13 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+
 	"github.com/google/go-attestation/attest"
 )
 
-func getAttestAndEndorseKey() attest.EK {
+func getAttestAndEndorseKey() (ekS string, akS string) {
 	config := &attest.OpenConfig{}
 	tpm, err := attest.OpenTPM(config)
 	if err != nil {
@@ -20,14 +23,24 @@ func getAttestAndEndorseKey() attest.EK {
 	if err != nil {
 		panic(err)
 	}
+	// EK
+	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ek.Public)
+	if err != nil {
+		panic(err)
+	}
+	pubkey_pem := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: pubkey_bytes,
+		},
+	)
+	println(string(pubkey_pem))
+
+	// AK
 	akConfig := &attest.AKConfig{}
 	ak, err := tpm.NewAK(akConfig)
-
-	attestParams := ak.AttestationParameters()
-	println("Hier stehen die attest Params:", string(attestParams.Public))
-
 	akBytes, err := ak.Marshal()
 	println("Hier steht akBytes:", string(akBytes))
 
-	return ek
+	return string(pubkey_pem), string(akBytes)
 }
