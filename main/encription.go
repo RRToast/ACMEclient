@@ -154,7 +154,8 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (authorization
 	}
 	println("NewCertificate requested")
 	test = resp.Header.Get("Replay-Nonce")
-	println(m["authorizations"])
-	return resp.Header.Get("Location")
+	z := string(m["authorizations"])
+	println(z)
+	return "authorization url platzhalter"
 
 }
