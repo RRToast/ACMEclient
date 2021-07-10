@@ -176,9 +176,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
-	payload := ""
-	byts, _ := json.Marshal(payload)
-	signer.Options()
+	byts, _ := json.Marshal("")
 	object, err := signer.Sign(byts)
 	if err != nil {
 		panic(err)

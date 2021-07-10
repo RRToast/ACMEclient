@@ -22,8 +22,8 @@ func main() {
 	}
 
 	order_url := newAccount(privateKey)
-	auth_order_url, authorization_url := newCertificate(privateKey, order_url)
-	authChallenge(privateKey, auth_order_url, authorization_url)
+	_, authorization_url := newCertificate(privateKey, order_url)
+	authChallenge(privateKey, order_url, authorization_url)
 }
 
 func getNonce() string {
