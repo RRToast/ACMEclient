@@ -101,7 +101,7 @@ type Identifier struct {
 	Value string
 }
 
-func newCertificate(privateKey *rsa.PrivateKey, order_url string) (authorizations_url string) {
+func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_url string, authorizations_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", order_url)
 	signerOpts.WithHeader("url", "https://192.168.1.5:14000/order-plz")
@@ -160,14 +160,14 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (authorization
 	pos = strings.Index(z, "\"")
 	z = z[:pos]
 	println(z)
-	return z
+	return resp.Header.Get("Location"), z
 
 }
 
-func authChallenge(privateKey *rsa.PrivateKey, authorization_url string) {
+func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) {
 	// GET as POST request
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	signerOpts.WithHeader("kid", authorization_url)
+	signerOpts.WithHeader("kid", auth_order_url)
 	signerOpts.WithHeader("url", authorization_url)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
