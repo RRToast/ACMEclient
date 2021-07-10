@@ -166,6 +166,8 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 
 func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) {
 	// GET as POST request
+	println("auth_order_url:", auth_order_url)
+	println("authorization_url:", authorization_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", auth_order_url)
 	signerOpts.WithHeader("url", authorization_url)
@@ -174,7 +176,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
-	payload := map[string]interface{}{"": ""}
+	payload := ""
 	byts, _ := json.Marshal(payload)
 	signer.Options()
 	object, err := signer.Sign(byts)
