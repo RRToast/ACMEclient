@@ -20,6 +20,14 @@ func getAttestAndEndorseKey() attest.EK {
 	if err != nil {
 		panic(err)
 	}
+	akConfig := &attest.AKConfig{}
+	ak, err := tpm.NewAK(akConfig)
+
+	attestParams := ak.AttestationParameters()
+	println("Hier stehen die attest Params:", string(attestParams.Public))
+
+	akBytes, err := ak.Marshal()
+	println("Hier steht akBytes:", string(akBytes))
 
 	return ek
 }
