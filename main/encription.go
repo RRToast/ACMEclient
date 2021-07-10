@@ -98,10 +98,10 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 
 type Identifier struct {
 	Type  string `json:"type"`
-	Value interface{}
+	Value string
 }
 
-func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
+func newCertificate(privateKey *rsa.PrivateKey, order_url string) (authorizations_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", order_url)
 	signerOpts.WithHeader("url", "https://192.168.1.5:14000/order-plz")
@@ -140,6 +140,21 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) {
 	defer resp.Body.Close()
 	println("HTTP result status: ", resp.Status)
 	body, err := io.ReadAll(resp.Body)
-	println("HTTP result body: ", string(body))
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	// println("HTTP result header:", string(resp.Header.Get("Location")))
+	// println("HTTP result body: ", string(body))
+	m := make(map[string]json.RawMessage)
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	println("NewCertificate requested")
+	test = resp.Header.Get("Replay-Nonce")
+	println(m["authorizations"])
+	return resp.Header.Get("Location")
 
 }
