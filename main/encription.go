@@ -176,7 +176,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
-	byts, _ := json.Marshal("")
+	byts := []byte{}
 	object, err := signer.Sign(byts)
 	if err != nil {
 		panic(err)
@@ -213,6 +213,20 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		println(err.Error())
 		panic(err)
 	}
+	n := []byte{}
+	err = json.Unmarshal(m["challenges"], &n)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	o := make(map[string]string)
+	err = json.Unmarshal(n, &o)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+
+	println("hier soll das secret stehen: ", o["EkSecret"])
 	println("Auth Challenge erhalten")
 	test = resp.Header.Get("Replay-Nonce")
 
