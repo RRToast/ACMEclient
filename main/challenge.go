@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-attestation/attest"
 )
 
-func getAttestAndEndorseKey() (ekS string, akS attest.AK) {
+func getAttestAndEndorseKey() (ekS string, akS attest.AK, tpmm attest.TPM) {
 	config := &attest.OpenConfig{}
 	tpm, err := attest.OpenTPM(config)
 	if err != nil {
@@ -38,5 +38,5 @@ func getAttestAndEndorseKey() (ekS string, akS attest.AK) {
 	// AK
 	akConfig := &attest.AKConfig{}
 	ak, err := tpm.NewAK(akConfig)
-	return string(pubkey_pem), *ak
+	return string(pubkey_pem), *ak, *tpm
 }

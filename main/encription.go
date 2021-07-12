@@ -14,6 +14,7 @@ import (
 
 var test = ""
 var globAk = attest.AK{}
+var globTPM = attest.TPM{}
 
 type dummyNonceSource struct{}
 
@@ -112,8 +113,9 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		panic(err)
 	}
 
-	EkValue, AkValue := getAttestAndEndorseKey()
+	EkValue, AkValue, tpmm := getAttestAndEndorseKey()
 	globAk = AkValue
+	globTPM = tpmm
 	akBytes, err := AkValue.Marshal()
 
 	testinator := []Identifier{{Type: "ek", Value: string(akBytes) + EkValue}}
@@ -226,12 +228,12 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	pos = strings.Index(ois[2], "\"token\":")
 	token := ois[2][pos+10 : len(ois[2])-1]
 
-	pos = strings.Index(ois[4], "\"Credentail\":")
-	Credentail := ois[4][pos+15 : len(ois[2])-1]
+	pos = strings.Index(ois[4], "\"Credential\":")
+	Credentail := ois[4][pos+15 : len(ois[4])-1]
 
 	pos = strings.Index(ois[5], "\"Secret\":")
 	poss := strings.Index(ois[5], "}")
-	Secret := ois[4][pos+15 : poss-3]
+	Secret := ois[5][pos+11 : poss-4]
 
 	println("Meine URL: ", url)
 	println("Mein Token: ", token)
@@ -247,14 +249,11 @@ func solveEkSecret(Credentail string, Secret string) {
 	bsecret := []byte(Secret)
 	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
 
-	//kann ich das neu machen oder wie?
-	config := &attest.OpenConfig{}
-	tpm, err := attest.OpenTPM(config)
+	secret, err := globAk.ActivateCredential(&globTPM, cred)
 	if err != nil {
 		panic(err)
 	}
-	secret, err := globAk.ActivateCredential(tpm, cred)
 
-	println(string(secret))
+	println("Solve value:", string(secret))
 
 }
