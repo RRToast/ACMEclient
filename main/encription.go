@@ -217,13 +217,14 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
-	url := ois[1][pos+8 : len(ois[1])]
+	url := ois[1][pos+8 : len(ois[1])-1]
 
 	pos = strings.Index(ois[2], "\"token\":")
-	token := ois[2][pos+10 : len(ois[2])]
+	token := ois[2][pos+10 : len(ois[2])-1]
 
 	pos = strings.Index(ois[4], "\"EkSecret\":")
-	secret := ois[4][pos+13 : len(ois[4])]
+	poss := strings.Index(ois[4], "=")
+	secret := ois[4][pos+13 : poss+1]
 
 	println("Meine URL: ", url)
 	println("Mein Token: ", token)
