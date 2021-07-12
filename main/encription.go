@@ -214,12 +214,10 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
-	n := make(map[string]json.RawMessage)
-	err = json.Unmarshal(m["challenges"], &n)
-	if err != nil {
-		println(err.Error())
-		panic(err)
-	}
+	array := m["challenges"]
+	n := array[0]
+
+	println(string(n))
 	println("Was ist denn mit Karsten los?: ", n)
 	println("hier soll das secret stehen: ", n["EkSecret"])
 	println("Auth Challenge erhalten")
