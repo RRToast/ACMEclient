@@ -214,13 +214,20 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
-	array := m["challenges"]
-	n := array[0]
+	ois := strings.Split(string(m["challenges"]), ",")
 
-	println(string(n))
-	println("Was ist denn mit Karsten los?: ", n)
-	println("hier soll das secret stehen: ", n["EkSecret"])
-	println("Auth Challenge erhalten")
+	pos := strings.Index(ois[1], "\"url\":")
+	url := ois[1][pos+8 : len(ois[1])]
+
+	pos = strings.Index(ois[2], "\"token\":")
+	token := ois[2][pos+10 : len(ois[2])]
+
+	pos = strings.Index(ois[4], "\"EkSecret\":")
+	secret := ois[4][pos+13 : len(ois[4])]
+
+	println("Meine URL: ", url)
+	println("Mein Token: ", token)
+	println("Mein Secret:", secret)
 	test = resp.Header.Get("Replay-Nonce")
 
 }
