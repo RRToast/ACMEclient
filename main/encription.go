@@ -12,7 +12,7 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 )
 
-var test = ""
+var globNonce = ""
 var globAk = attest.AK{}
 var globTPM = attest.TPM{}
 
@@ -28,8 +28,8 @@ func (n dummyNonceSource) Nonce() (string, error) {
 	if err != nil {
 		panic(err)
 	}
-	if test != "" {
-		return test, nil
+	if globNonce != "" {
+		return globNonce, nil
 	}
 	ua := res.Header.Get("Replay-Nonce")
 	return ua, nil
@@ -55,7 +55,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 	}
 
 	var testor [1]string
-	testor[0] = "mailto:test.test@test.de"
+	testor[0] = "mailto:globNonce.globNonce@globNonce.de"
 	payload := map[string]interface{}{"termsOfServiceAgreed": true, "contact": testor}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
@@ -95,7 +95,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		panic(err)
 	}
 	println("Account created")
-	test = resp.Header.Get("Replay-Nonce")
+	globNonce = resp.Header.Get("Replay-Nonce")
 	return resp.Header.Get("Location")
 }
 
@@ -159,7 +159,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		panic(err)
 	}
 	println("NewCertificate requested")
-	test = resp.Header.Get("Replay-Nonce")
+	globNonce = resp.Header.Get("Replay-Nonce")
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
 	z = z[pos:]
@@ -239,7 +239,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	println("Mein Token: ", token)
 	println("Mein Credentail:", Credentail)
 	println("Mein Secret:", Secret)
-	test = resp.Header.Get("Replay-Nonce")
+	globNonce = resp.Header.Get("Replay-Nonce")
 
 	solveEkSecret(Credentail, Secret)
 }
@@ -251,6 +251,8 @@ func solveEkSecret(Credentail string, Secret string) {
 
 	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
 	println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
+	test, _ := globAk.Marshal()
+	println("So sieht mein AK value aus: ", string(test))
 
 	secret, err := globAk.ActivateCredential(&globTPM, cred)
 	if err != nil {
