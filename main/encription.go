@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/go-attestation/attest"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
 var test = ""
+var globAk = attest.AK{}
 
 type dummyNonceSource struct{}
 
@@ -111,8 +113,10 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	}
 
 	EkValue, AkValue := getAttestAndEndorseKey()
+	globAk = AkValue
+	akBytes, err := AkValue.Marshal()
 
-	testinator := []Identifier{{Type: "ek", Value: AkValue + EkValue}}
+	testinator := []Identifier{{Type: "ek", Value: string(akBytes) + EkValue}}
 	payload := map[string]interface{}{"identifiers": testinator, "notBefore": "2021-08-01T00:04:00+04:00", "notAfter": "2021-08-08T00:04:00+04:00"}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
@@ -222,14 +226,35 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	pos = strings.Index(ois[2], "\"token\":")
 	token := ois[2][pos+10 : len(ois[2])-1]
 
-	EkSecret := ois[4] + ois[5]
-	pos = strings.Index(EkSecret, "{")
-	poss := strings.Index(EkSecret, "}")
-	secret := EkSecret[pos+1 : poss]
+	pos = strings.Index(ois[4], "\"Credentail\":")
+	Credentail := ois[4][pos+15 : len(ois[2])-1]
+
+	pos = strings.Index(ois[5], "\"Secret\":")
+	poss := strings.Index(ois[5], "}")
+	Secret := ois[4][pos+15 : poss-3]
 
 	println("Meine URL: ", url)
 	println("Mein Token: ", token)
-	println("Mein Secret:", secret)
+	println("Mein Credentail:", Credentail)
+	println("Mein Secret:", Secret)
 	test = resp.Header.Get("Replay-Nonce")
+
+	solveEkSecret(Credentail, Secret)
+}
+
+func solveEkSecret(Credentail string, Secret string) {
+	bcred := []byte(Credentail)
+	bsecret := []byte(Secret)
+	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
+
+	//kann ich das neu machen oder wie?
+	config := &attest.OpenConfig{}
+	tpm, err := attest.OpenTPM(config)
+	if err != nil {
+		panic(err)
+	}
+	secret, err := globAk.ActivateCredential(tpm, cred)
+
+	println(string(secret))
 
 }
