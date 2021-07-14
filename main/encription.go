@@ -253,7 +253,10 @@ func solveEkSecret(Credentail string, Secret string) {
 	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
 	println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
 
-	secret, err := globAk.ActivateCredential(&globTPM, cred)
+	tes, _ := globAk.Marshal()
+	tess, _ := globTPM.LoadAK(tes)
+
+	secret, err := tess.ActivateCredential(&globTPM, cred)
 	if err != nil {
 		panic(err)
 	}
