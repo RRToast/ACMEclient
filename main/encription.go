@@ -212,7 +212,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -249,34 +249,10 @@ func solveEkSecret(Credentail string, Secret string) {
 	bsecret := []byte(Secret)
 	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
 
-	//println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
-	//println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
-	test, _ := globAk.Marshal()
-	println("So sieht mein AK value aus: ", string(test))
-	// TEST ANFANG
-	/* 	eks, err := globTPM.EKs()
-	   	if err != nil {
-	   		panic(err)
-	   	}
+	println("So sieht alles aus: ", cred)
+	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
+	println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
 
-	   	ek := eks[0]
-	   	if err != nil {
-	   		panic(err)
-	   	}
-	   	// EK
-	   	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ek.Public)
-	   	if err != nil {
-	   		panic(err)
-	   	}
-	   	pubkey_pem := pem.EncodeToMemory(
-	   		&pem.Block{
-	   			Type:  "RSA PUBLIC KEY",
-	   			Bytes: pubkey_bytes,
-	   		},
-	   	)
-	   	println("TEST eeeee:", string(globAk.Marshal()))
-	   	println("TEST ENDE:", string(pubkey_pem)) */
-	// TEST ENDE
 	secret, err := globAk.ActivateCredential(&globTPM, cred)
 	if err != nil {
 		panic(err)
