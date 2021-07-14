@@ -34,11 +34,11 @@ func getAttestAndEndorseKey() (ekS string, akS attest.AK, tpmm attest.TPM) {
 			Bytes: pubkey_bytes,
 		},
 	)
-	println("Test aaa:", ek.CertificateURL)
-	println("TEST ANFANG:", string(pubkey_pem))
 
 	// AK
 	akConfig := &attest.AKConfig{}
 	ak, err := tpm.NewAK(akConfig)
+	tes, _ := ak.Marshal()
+	println("Ursprünglicher aK value:", string(tes))
 	return string(pubkey_pem), *ak, *tpm
 }

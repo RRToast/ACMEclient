@@ -3,9 +3,7 @@ package main
 import (
 	"crypto/rsa"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"io"
 	"net/http"
 	"strings"
@@ -253,31 +251,31 @@ func solveEkSecret(Credentail string, Secret string) {
 
 	//println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
 	//println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
-	//test, _ := globAk.Marshal()
-	//println("So sieht mein AK value aus: ", string(test))
+	test, _ := globAk.Marshal()
+	println("So sieht mein AK value aus: ", string(test))
 	// TEST ANFANG
-	eks, err := globTPM.EKs()
-	if err != nil {
-		panic(err)
-	}
+	/* 	eks, err := globTPM.EKs()
+	   	if err != nil {
+	   		panic(err)
+	   	}
 
-	ek := eks[0]
-	if err != nil {
-		panic(err)
-	}
-	// EK
-	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ek.Public)
-	if err != nil {
-		panic(err)
-	}
-	pubkey_pem := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "RSA PUBLIC KEY",
-			Bytes: pubkey_bytes,
-		},
-	)
-	println("TEST eeeee:", ek.CertificateURL)
-	println("TEST ENDE:", string(pubkey_pem))
+	   	ek := eks[0]
+	   	if err != nil {
+	   		panic(err)
+	   	}
+	   	// EK
+	   	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ek.Public)
+	   	if err != nil {
+	   		panic(err)
+	   	}
+	   	pubkey_pem := pem.EncodeToMemory(
+	   		&pem.Block{
+	   			Type:  "RSA PUBLIC KEY",
+	   			Bytes: pubkey_bytes,
+	   		},
+	   	)
+	   	println("TEST eeeee:", string(globAk.Marshal()))
+	   	println("TEST ENDE:", string(pubkey_pem)) */
 	// TEST ENDE
 	secret, err := globAk.ActivateCredential(&globTPM, cred)
 	if err != nil {
