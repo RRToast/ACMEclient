@@ -249,14 +249,16 @@ func solveEkSecret(Credentail string, Secret string) {
 	bsecret := []byte(Secret)
 	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
 
-	println("So sieht alles aus: ", cred)
 	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
 	println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
 
-	tes, _ := globAk.Marshal()
-	tess, _ := globTPM.LoadAK(tes)
+	config := &attest.OpenConfig{}
+	tpm, err := attest.OpenTPM(config)
 
-	secret, err := tess.ActivateCredential(&globTPM, cred)
+	tes, _ := globAk.Marshal()
+	tess, _ := tpm.LoadAK(tes)
+
+	secret, err := tess.ActivateCredential(tpm, cred)
 	if err != nil {
 		panic(err)
 	}
