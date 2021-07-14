@@ -10,6 +10,8 @@ import (
 
 	"github.com/google/go-attestation/attest"
 	jose "gopkg.in/square/go-jose.v2"
+
+	base "encoding/base64"
 )
 
 var globNonce = ""
@@ -259,6 +261,11 @@ func solveEkSecret(Credentail string, Secret string) {
 	tess, _ := tpm.LoadAK(tes)
 
 	secret, err := tess.ActivateCredential(tpm, cred)
+
+	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+
+	tesss := encode.EncodeToString(secret)
+	println("Solve value:", tesss)
 	if err != nil {
 		panic(err)
 	}
