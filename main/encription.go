@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/go-attestation/attest"
 	jose "gopkg.in/square/go-jose.v2"
@@ -149,8 +150,10 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 
 func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) (secret string, answerUrl string) {
 	// GET as POST request
-	println("auth_order_url:", auth_order_url)
-	println("authorization_url:", authorization_url)
+
+	if !globFirstIteration {
+		time.Sleep(10 * time.Second)
+	}
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", auth_order_url)
 	signerOpts.WithHeader("url", authorization_url)
@@ -207,8 +210,6 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 }
 
 func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answer_url string, secret string) {
-	println("auth_order_url:", auth_order_url)
-	println("authorization_url:", answer_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", auth_order_url)
 	signerOpts.WithHeader("url", answer_url)
