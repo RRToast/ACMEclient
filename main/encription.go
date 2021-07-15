@@ -251,9 +251,6 @@ func solveEkSecret(Credentail string, Secret string) {
 	bsecret, _ := decode.DecodeString(Secret)
 	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
 
-	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
-	println("so sieht mein Secret jetzt aus: ", string(cred.Secret))
-
 	config := &attest.OpenConfig{}
 	tpm, err := attest.OpenTPM(config)
 
@@ -265,6 +262,7 @@ func solveEkSecret(Credentail string, Secret string) {
 	if err != nil {
 		panic(err)
 	}
+	println("Secret ist: ", decode.EncodeToString(secret))
 
 	println("Solve value:", string(secret))
 
