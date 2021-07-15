@@ -144,7 +144,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 
 }
 
-func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) (secret string) {
+func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) (secret string, answerUrl string) {
 	// GET as POST request
 	println("auth_order_url:", auth_order_url)
 	println("authorization_url:", authorization_url)
@@ -194,16 +194,15 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	globNonce = resp.Header.Get("Replay-Nonce")
-	return extractAndSolveSecret(m)
-
+	return extractUrlAndSecret(m)
 }
 
-func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string, secret string) {
+func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answer_url string, secret string) {
 	println("auth_order_url:", auth_order_url)
-	println("authorization_url:", authorization_url)
+	println("authorization_url:", answer_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", auth_order_url)
-	signerOpts.WithHeader("url", authorization_url)
+	signerOpts.WithHeader("url", answer_url)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
 		panic(err)
@@ -225,7 +224,7 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, auth
 	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
 
-	req, err := http.NewRequest("POST", authorization_url, strings.NewReader(serialized))
+	req, err := http.NewRequest("POST", answer_url, strings.NewReader(serialized))
 	req.Header.Add("Content-Type", "application/jose+json")
 
 	resp, err := client.Do(req)
@@ -249,17 +248,15 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, auth
 		panic(err)
 	}
 
-	extractAndSolveSecret(m)
-
 	globNonce = resp.Header.Get("Replay-Nonce")
 
 }
 
-func extractAndSolveSecret(m map[string]json.RawMessage) (secret string) {
+func extractUrlAndSecret(m map[string]json.RawMessage) (secret string, answerUrl string) {
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
-	//url := ois[1][pos+8 : len(ois[1])-1]
+	url := ois[1][pos+8 : len(ois[1])-1]
 
 	pos = strings.Index(ois[2], "\"token\":")
 	//token := ois[2][pos+10 : len(ois[2])-1]
@@ -276,7 +273,7 @@ func extractAndSolveSecret(m map[string]json.RawMessage) (secret string) {
 	   	println("Mein Credentail:", Credentail)
 	   	println("Mein Secret:", Secret) */
 
-	return solveEkSecret(Credentail, Secret)
+	return solveEkSecret(Credentail, Secret), url
 }
 
 func solveEkSecret(Credentail string, Secret string) (secret string) {
