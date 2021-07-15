@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rsa"
 	"crypto/tls"
+	base "encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/google/go-attestation/attest"
 	jose "gopkg.in/square/go-jose.v2"
-
-	base "encoding/base64"
 )
 
 var globNonce = ""
@@ -247,8 +246,9 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 }
 
 func solveEkSecret(Credentail string, Secret string) {
-	bcred := []byte(Credentail)
-	bsecret := []byte(Secret)
+	decode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+	bcred, _ := decode.DecodeString(Credentail)
+	bsecret, _ := decode.DecodeString(Secret)
 	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
 
 	println("so sieht mein Credentail jetzt aus: ", string(cred.Credential))
@@ -262,10 +262,6 @@ func solveEkSecret(Credentail string, Secret string) {
 
 	secret, err := tess.ActivateCredential(tpm, cred)
 
-	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
-
-	tesss := encode.EncodeToString(secret)
-	println("Solve value:", tesss)
 	if err != nil {
 		panic(err)
 	}
