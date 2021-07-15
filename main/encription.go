@@ -75,6 +75,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		panic(err)
 	}
 	println("Account created")
+	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	return resp.Header.Get("Location")
 }
@@ -134,6 +135,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		panic(err)
 	}
 	println("NewCertificate requested")
+	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
@@ -187,7 +189,8 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
+	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -247,6 +250,7 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
 	println("HTTP result body: ", string(body))
+	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
