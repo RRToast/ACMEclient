@@ -1,8 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	base "encoding/base64"
 	"encoding/json"
 	"io"
@@ -148,7 +152,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 
 }
 
-func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) (secret string, answerUrl string) {
+func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorization_url string) (secret string, answerUrl string, dns string) {
 	// GET as POST request
 
 	if !globFirstIteration {
@@ -204,9 +208,9 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	}
 	globNonce = resp.Header.Get("Replay-Nonce")
 	if globFirstIteration {
-		return extractUrlAndSecret(m)
+		return extractUrlSecretDNS(m)
 	} else {
-		return "", ""
+		return "", "", ""
 	}
 
 }
@@ -252,6 +256,59 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
+	// println("HTTP result body: ", string(body))
+	println("")
+	m := make(map[string]json.RawMessage)
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	globNonce = resp.Header.Get("Replay-Nonce")
+
+}
+
+func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns string) {
+	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
+	signerOpts.WithHeader("kid", auth_order_url)
+	signerOpts.WithHeader("url", auth_order_url)
+	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	payload := map[string]interface{}{"csr": createCSR(dns)}
+	byts, _ := json.Marshal(payload)
+	signer.Options()
+	object, err := signer.Sign(byts)
+	if err != nil {
+		panic(err)
+	}
+
+	serialized := object.FullSerialize()
+	// println("Payload: ", serialized)
+
+	tlsConfig := &tls.Config{}
+	tlsConfig.InsecureSkipVerify = true
+	tr := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: tr}
+
+	req, err := http.NewRequest("POST", auth_order_url, strings.NewReader(serialized))
+	req.Header.Add("Content-Type", "application/jose+json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	defer resp.Body.Close()
+	println("HTTP result status: ", resp.Status)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	println("HTTP result header:", string(resp.Header.Get("Location")))
 	println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
@@ -260,12 +317,42 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 		println(err.Error())
 		panic(err)
 	}
-
 	globNonce = resp.Header.Get("Replay-Nonce")
 
 }
 
-func extractUrlAndSecret(m map[string]json.RawMessage) (secret string, answerUrl string) {
+var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
+
+func createCSR(dns string) (csr string) {
+	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
+
+	emailAddress := "test@example.com"
+	subj := pkix.Name{
+		CommonName:         dns,
+		Country:            []string{"AU"},
+		Province:           []string{"Some-State"},
+		Locality:           []string{"MyCity"},
+		Organization:       []string{"Company Ltd"},
+		OrganizationalUnit: []string{"IT"},
+	}
+	rawSubj := subj.ToRDNSequence()
+	rawSubj = append(rawSubj, []pkix.AttributeTypeAndValue{
+		{Type: oidEmailAddress, Value: emailAddress},
+	})
+
+	asn1Subj, _ := asn1.Marshal(rawSubj)
+	template := x509.CertificateRequest{
+		RawSubject:         asn1Subj,
+		EmailAddresses:     []string{emailAddress},
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
+	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+	return encode.EncodeToString(csrBytes)
+}
+
+func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl string, dns string) {
 	globFirstIteration = false
 	ois := strings.Split(string(m["challenges"]), ",")
 
@@ -282,12 +369,17 @@ func extractUrlAndSecret(m map[string]json.RawMessage) (secret string, answerUrl
 	poss := strings.Index(ois[5], "}")
 	Secret := ois[5][pos+11 : poss-4]
 
+	pos = strings.Index(ois[6], "\"DNS\":")
+	poss = strings.Index(ois[5], "}")
+	dns = ois[5][pos+11 : poss-4]
+
 	/* 	println("Meine URL: ", url)
 	   	println("Mein Token: ", token)
 	   	println("Mein Credentail:", Credentail)
 	   	println("Mein Secret:", Secret) */
+	println("DNS Value ist:", dns)
 
-	return solveEkSecret(Credentail, Secret), url
+	return solveEkSecret(Credentail, Secret), url, dns
 }
 
 func solveEkSecret(Credentail string, Secret string) (secret string) {
