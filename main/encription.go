@@ -19,31 +19,9 @@ var globTPM = attest.TPM{}
 
 type dummyNonceSource struct{}
 
-func (n dummyNonceSource) Nonce() (string, error) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-
-	res, err := client.Head("https://192.168.1.5:14000/nonce-plz")
-	if err != nil {
-		panic(err)
-	}
-	if globNonce != "" {
-		return globNonce, nil
-	}
-	ua := res.Header.Get("Replay-Nonce")
-	return ua, nil
-}
-
-func trimQuote(s string) string {
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-	return s
+type Identifier struct {
+	Type  string `json:"type"`
+	Value string
 }
 
 func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
@@ -98,11 +76,6 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 	println("Account created")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	return resp.Header.Get("Location")
-}
-
-type Identifier struct {
-	Type  string `json:"type"`
-	Value string
 }
 
 func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_url string, authorizations_url string) {
@@ -213,7 +186,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	//println("HTTP result body: ", string(body))
+	println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -221,13 +194,33 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 
+	extractAndSolveSecret(m)
+
+	globNonce = resp.Header.Get("Replay-Nonce")
+
+}
+
+/* func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string) {
+	println("auth_order_url:", auth_order_url)
+	println("authorization_url:", authorization_url)
+	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
+	signerOpts.WithHeader("kid", auth_order_url)
+	signerOpts.WithHeader("url", authorization_url)
+	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
+	if err != nil {
+		panic(err)
+	}
+
+} */
+
+func extractAndSolveSecret(m map[string]json.RawMessage) {
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
-	url := ois[1][pos+8 : len(ois[1])-1]
+	//url := ois[1][pos+8 : len(ois[1])-1]
 
 	pos = strings.Index(ois[2], "\"token\":")
-	token := ois[2][pos+10 : len(ois[2])-1]
+	//token := ois[2][pos+10 : len(ois[2])-1]
 
 	pos = strings.Index(ois[4], "\"Credential\":")
 	Credentail := ois[4][pos+15 : len(ois[4])-1]
@@ -236,20 +229,20 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	poss := strings.Index(ois[5], "}")
 	Secret := ois[5][pos+11 : poss-4]
 
-	println("Meine URL: ", url)
-	println("Mein Token: ", token)
-	println("Mein Credentail:", Credentail)
-	println("Mein Secret:", Secret)
-	globNonce = resp.Header.Get("Replay-Nonce")
+	/* 	println("Meine URL: ", url)
+	   	println("Mein Token: ", token)
+	   	println("Mein Credentail:", Credentail)
+	   	println("Mein Secret:", Secret) */
 
-	solveEkSecret(Credentail, Secret)
+	secret := solveEkSecret(Credentail, Secret)
+	println(secret)
 }
 
-func solveEkSecret(Credentail string, Secret string) {
+func solveEkSecret(Credentail string, Secret string) (secret string) {
 	decode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 	bcred, _ := decode.DecodeString(Credentail)
-	bsecret, _ := decode.DecodeString(Secret)
-	cred := attest.EncryptedCredential{Credential: bcred, Secret: bsecret}
+	bSecret, _ := decode.DecodeString(Secret)
+	cred := attest.EncryptedCredential{Credential: bcred, Secret: bSecret}
 
 	config := &attest.OpenConfig{}
 	tpm, err := attest.OpenTPM(config)
@@ -257,13 +250,39 @@ func solveEkSecret(Credentail string, Secret string) {
 	tes, _ := globAk.Marshal()
 	tess, _ := tpm.LoadAK(tes)
 
-	secret, err := tess.ActivateCredential(tpm, cred)
+	bsecret, err := tess.ActivateCredential(tpm, cred)
 
 	if err != nil {
 		panic(err)
 	}
-	println("Secret ist: ", decode.EncodeToString(secret))
+	println("Secret ist: ", decode.EncodeToString(bsecret))
 
-	println("Solve value:", string(secret))
+	return decode.EncodeToString(bsecret)
+}
 
+func (n dummyNonceSource) Nonce() (string, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	res, err := client.Head("https://192.168.1.5:14000/nonce-plz")
+	if err != nil {
+		panic(err)
+	}
+	if globNonce != "" {
+		return globNonce, nil
+	}
+	ua := res.Header.Get("Replay-Nonce")
+	return ua, nil
+}
+
+func trimQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+	return s
 }
