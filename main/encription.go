@@ -209,7 +209,7 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, auth
 		panic(err)
 	}
 
-	payload := map[string]interface{}{"status": "deactivated", "secret": secret}
+	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
 	object, err := signer.Sign(byts)
