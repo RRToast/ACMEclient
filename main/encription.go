@@ -16,6 +16,7 @@ import (
 var globNonce = ""
 var globAk = attest.AK{}
 var globTPM = attest.TPM{}
+var globFirstIteration = true
 
 type dummyNonceSource struct{}
 
@@ -194,7 +195,12 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	globNonce = resp.Header.Get("Replay-Nonce")
-	return extractUrlAndSecret(m)
+	if globFirstIteration {
+		return extractUrlAndSecret(m)
+	} else {
+		return "", ""
+	}
+
 }
 
 func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answer_url string, secret string) {
@@ -253,6 +259,7 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 }
 
 func extractUrlAndSecret(m map[string]json.RawMessage) (secret string, answerUrl string) {
+	globFirstIteration = false
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
