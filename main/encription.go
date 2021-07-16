@@ -132,7 +132,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		panic(err)
 	}
 	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	println("HTTP result body NewCertificate: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
