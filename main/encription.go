@@ -85,7 +85,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 	return resp.Header.Get("Location")
 }
 
-func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_url string, authorizations_url string) {
+func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", order_url)
 	signerOpts.WithHeader("url", "https://192.168.1.5:14000/order-plz")
@@ -150,7 +150,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	pos = strings.Index(z, "\"")
 	z = z[:pos]
 	println(z)
-	return resp.Header.Get("Location"), z
+	return resp.Header.Get("Location"), z, trimQuote(finalizeURL)
 
 }
 
@@ -270,10 +270,10 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 
 }
 
-func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns string) {
+func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns string, finalizeURL string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", auth_order_url)
-	signerOpts.WithHeader("url", auth_order_url)
+	signerOpts.WithHeader("url", finalizeURL)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
 		panic(err)
@@ -295,7 +295,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
 
-	req, err := http.NewRequest("POST", auth_order_url, strings.NewReader(serialized))
+	req, err := http.NewRequest("POST", finalizeURL, strings.NewReader(serialized))
 	req.Header.Add("Content-Type", "application/jose+json")
 
 	resp, err := client.Do(req)
