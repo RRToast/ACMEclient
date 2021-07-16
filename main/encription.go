@@ -142,7 +142,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	println("NewCertificate requested")
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
-	finalizeURL := string(m["finalize"])
+	finalizeURL = string(m["finalize"])
 	println("Finalize URL :", finalizeURL)
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
@@ -311,7 +311,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	//println("HTTP result body: ", string(body))
+	println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
@@ -356,6 +356,8 @@ func createCSR(dns string) (csr string) {
 
 func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl string, dns string) {
 	globFirstIteration = false
+
+	println(m)
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
@@ -381,7 +383,7 @@ func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl
 	   	println("Mein Secret:", Secret) */
 	println("DNS Value ist:", dns)
 
-	return solveEkSecret(Credentail, Secret), url, dns
+	return solveEkSecret(Credentail, Secret), url, trimQuote(dns)
 }
 
 func solveEkSecret(Credentail string, Secret string) (secret string) {
