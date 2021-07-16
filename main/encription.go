@@ -326,7 +326,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 func createCSR(dns string) (csr string) {
-	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
+	//keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
 
 	emailAddress := "test@example.com"
 	subj := pkix.Name{
@@ -349,15 +349,13 @@ func createCSR(dns string) (csr string) {
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
 
-	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
+	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, globAk.AttestationParameters().CreateData)
 	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 	return encode.EncodeToString(csrBytes)
 }
 
 func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl string, dns string) {
 	globFirstIteration = false
-
-	println(m)
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")
@@ -374,14 +372,14 @@ func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl
 	Secret := ois[5][pos+11 : poss-4]
 
 	pos = strings.Index(ois[6], "\"DNS\":")
-	poss = strings.Index(ois[5], "}")
-	dns = ois[5][pos+11 : poss-4]
+	poss = strings.Index(ois[6], "}")
+	dns = ois[6][pos+8 : poss-8]
 
 	/* 	println("Meine URL: ", url)
 	   	println("Mein Token: ", token)
 	   	println("Mein Credentail:", Credentail)
 	   	println("Mein Secret:", Secret) */
-	println("DNS Value ist:", dns)
+	// println("DNS Value ist:", dns)
 
 	return solveEkSecret(Credentail, Secret), url, trimQuote(dns)
 }
