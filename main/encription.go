@@ -198,8 +198,8 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	if !globFirstIteration {
-		//println("HTTP result body: ", string(body))
+	if globFirstIteration {
+		println("HTTP result body: ", string(body))
 	}
 	println("")
 	m := make(map[string]json.RawMessage)
