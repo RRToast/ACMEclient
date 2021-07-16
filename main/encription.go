@@ -72,7 +72,7 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 		panic(err)
 	}
 	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -132,7 +132,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		panic(err)
 	}
 	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body NewCertificate: ", string(body))
+	//println("HTTP result body NewCertificate: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -142,6 +142,8 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	println("NewCertificate requested")
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
+	finalizeURL := string(m["finalize"])
+	println("Finalize URL :", finalizeURL)
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
 	z = z[pos:]
@@ -197,7 +199,7 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
 	if !globFirstIteration {
-		println("HTTP result body: ", string(body))
+		//println("HTTP result body: ", string(body))
 	}
 	println("")
 	m := make(map[string]json.RawMessage)
@@ -256,7 +258,7 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
@@ -309,7 +311,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 		panic(err)
 	}
 	println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
