@@ -348,8 +348,9 @@ func createCSR(dns string) (csr string) {
 		EmailAddresses:     []string{emailAddress},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
+	println("ist das hier der public part? :", globAk.AttestationParameters().Public)
 
-	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, globAk.AttestationParameters().CreateData)
+	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, globAk.AttestationParameters().Public)
 	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 	return encode.EncodeToString(csrBytes)
 }
