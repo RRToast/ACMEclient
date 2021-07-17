@@ -288,7 +288,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
+	println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
@@ -348,10 +348,11 @@ func createCSR(dns string) (csr string) {
 		EmailAddresses:     []string{emailAddress},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
-	println("ist das hier der public part? :", globAk.AttestationParameters().Public)
+	println("ist das hier der public part? :", string(globAk.AttestationParameters().Public))
 
 	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, globAk.AttestationParameters().Public)
 	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
+	println("csr sieht so aus :", encode.EncodeToString(csrBytes))
 	return encode.EncodeToString(csrBytes)
 }
 
