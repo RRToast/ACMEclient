@@ -305,13 +305,13 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 	}
 	defer resp.Body.Close()
 	println("HTTP result status: ", resp.Status)
-	// body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		println(err.Error())
 		panic(err)
 	}
 	println("CSR Request send")
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
