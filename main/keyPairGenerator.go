@@ -35,21 +35,21 @@ func readCSRFromFile() {
 	}
 
 	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform engine", "-out", "scriptcsr.csr")
-	cmdCreateCSR.Dir = "home/pi/tpm2-tss-engine/"
+	cmdCreateCSR.Dir = "/home/pi/tpm2-tss-engine/"
 	err = cmdCreateCSR.Run()
 	if err != nil {
 		println("openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr Befehl konnte nicht ausgeführt werden", err.Error())
 	}
 
 	cmdCleanup := exec.Command("rm", "scriptKey.tss")
-	cmdCleanup.Dir = "home/pi/tpm2-tss-engine/"
+	cmdCleanup.Dir = "/home/pi/tpm2-tss-engine/"
 	err = cmdCleanup.Run()
 	if err != nil {
 		println("rm scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
 	}
 
 	cmdMoveFile := exec.Command("mv", "scriptcsr.csr", "/home/pi/ACMEclinet")
-	cmdMoveFile.Dir = "home/pi/tpm2-tss-engine/"
+	cmdMoveFile.Dir = "/home/pi/tpm2-tss-engine/"
 	err = cmdMoveFile.Run()
 	if err != nil {
 		println("mv scriptcsr.csr /home/pi Befehl konnte nicht ausgeführt werden", err.Error())
