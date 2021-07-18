@@ -327,8 +327,9 @@ func getCertificate(privateKey *rsa.PrivateKey, order_url string, authorization_
 	// GET as POST request
 
 	println("authorization url: ", authorization_url)
+	println("order URL", order_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	signerOpts.WithHeader("kid", authorization_url)
+	signerOpts.WithHeader("kid", order_url)
 	signerOpts.WithHeader("url", order_url)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
