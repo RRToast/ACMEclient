@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/x509"
 
-	"github.com/google/go-tpm/tpm"
 	"github.com/google/go-tpm/tpm2"
 )
 
@@ -30,7 +29,7 @@ var (
 )
 
 func createPublicPrivateKey() {
-	rw, _ := tpm.OpenTPM()
+	rw, _ := tpm2.OpenTPM()
 	defer rw.Close()
 	parentHandle, _, _ := tpm2.CreatePrimary(rw, tpm2.HandleOwner, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
 	defer tpm2.FlushContext(rw, parentHandle)

@@ -16,6 +16,7 @@ type Message struct {
 
 func main() {
 	println("start")
+	createPublicPrivateKey()
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		panic(err)
