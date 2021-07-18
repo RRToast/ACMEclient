@@ -329,12 +329,12 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 func createCSR(dns string) (csr string) {
-	println("DNS value ist: ", dns)
+	// println("DNS value ist: ", dns)
 	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
 
 	emailAddress := "test@example.com"
 	subj := pkix.Name{
-		CommonName:         dns,
+		CommonName:         "example.com",
 		Country:            []string{"AU"},
 		Province:           []string{"Some-State"},
 		Locality:           []string{"MyCity"},
