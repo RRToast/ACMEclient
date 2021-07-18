@@ -16,21 +16,24 @@ type Message struct {
 
 func main() {
 	println("start")
-	// readCSRFromFile()
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		panic(err)
+	testmode := true
+	if testmode {
+		teeeest()
+	} else {
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			panic(err)
+		}
+
+		order_url := newAccount(privateKey)                                                // Create Account
+		_, authorization_url, finalizeURL := newCertificate(privateKey, order_url)         // Create Order
+		secret, answer_url, dns := authChallenge(privateKey, order_url, authorization_url) // Get(Request) Challenge
+		authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
+		_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
+		makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR
+		getCertificate(privateKey, order_url, authorization_url)
 	}
-
-	order_url := newAccount(privateKey)                                                // Create Account
-	_, authorization_url, finalizeURL := newCertificate(privateKey, order_url)         // Create Order
-	secret, answer_url, dns := authChallenge(privateKey, order_url, authorization_url) // Get(Request) Challenge
-	authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
-	_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
-	makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR
-	getCertificate(privateKey, order_url, authorization_url)
-
 }
 
 func getNonce() string {
