@@ -7,10 +7,13 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/base64"
 	base "encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -348,10 +351,14 @@ func createCSR(dns string) (csr string) {
 		EmailAddresses:     []string{emailAddress},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
+
 	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
-	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
-	println("csr sieht so aus :", encode.EncodeToString(csrBytes))
-	return encode.EncodeToString(csrBytes)
+	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	v1 := base64.RawStdEncoding.EncodeToString(csrBytes)
+	v2 := base64.RawURLEncoding.EncodeToString(csrBytes)
+	println("Value 1, Encoded as RawSTD", v1)
+	println("Value 1, Encoded as RawURL", v2)
+	return v2
 }
 
 func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl string, dns string) {
