@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"os/exec"
 )
 
@@ -34,29 +33,45 @@ func readCSRFromFile() {
 		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
 	}
 
-	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr")
-	cmdCreateCSR.Dir = "/home/pi/tpm2-tss-engine/"
-	err = cmdCreateCSR.Run()
-	if err != nil {
-		println("openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr Befehl konnte nicht ausgeführt werden", err.Error())
-	}
+	commands := []string{"openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr"}
+	dir := "/home/pi/tpm2-tss-engine/"
 
-	cmdCleanup := exec.Command("rm", "scriptKey.tss")
-	cmdCleanup.Dir = "/home/pi/tpm2-tss-engine/"
-	err = cmdCleanup.Run()
-	if err != nil {
-		println("rm scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
-	}
+	cmd := exec.Cmd{Args: commands, Dir: dir}
+	cmd.Run()
+	value, err := cmd.Output()
+	println("value :", string(value))
+	/*
+		cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr")
+		cmdCreateCSR.Dir = "/home/pi/tpm2-tss-engine/"
+		erre := cmdCreateCSR.Output
+		erre
+		if erre != nil {
+			println("Output failed Terminal konnte nicht gezeigt werden", err.Error())
+		} else {
+			println("Output sah so aus:", string(arr))
+		}
 
-	cmdMoveFile := exec.Command("mv", "scriptcsr.csr", "/home/pi/ACMEclinet")
-	cmdMoveFile.Dir = "/home/pi/tpm2-tss-engine/"
-	err = cmdMoveFile.Run()
-	if err != nil {
-		println("mv scriptcsr.csr /home/pi Befehl konnte nicht ausgeführt werden", err.Error())
-	}
+		err = cmdCreateCSR.Run()
+		if err != nil {
+			println("openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr Befehl konnte nicht ausgeführt werden", err.Error())
+		}
 
-	if _, err := os.Stat("scriptcsr.csr"); os.IsNotExist(err) {
-		println(" scriptcsr.csr does not exist")
-	}
+		cmdCleanup := exec.Command("rm", "scriptKey.tss")
+		cmdCleanup.Dir = "/home/pi/tpm2-tss-engine/"
+		err = cmdCleanup.Run()
+		if err != nil {
+			println("rm scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
+		}
+
+		cmdMoveFile := exec.Command("mv", "scriptcsr.csr", "/home/pi/ACMEclinet")
+		cmdMoveFile.Dir = "/home/pi/tpm2-tss-engine/"
+		err = cmdMoveFile.Run()
+		if err != nil {
+			println("mv scriptcsr.csr /home/pi Befehl konnte nicht ausgeführt werden", err.Error())
+		}
+
+		if _, err := os.Stat("scriptcsr.csr"); os.IsNotExist(err) {
+			println(" scriptcsr.csr does not exist")
+		} */
 
 }
