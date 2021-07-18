@@ -34,7 +34,7 @@ func readCSRFromFile() {
 		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
 	}
 
-	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform engine", "-out", "scriptcsr.csr")
+	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr")
 	cmdCreateCSR.Dir = "/home/pi/tpm2-tss-engine/"
 	err = cmdCreateCSR.Run()
 	if err != nil {
