@@ -147,13 +147,12 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	finalizeURL = string(m["finalize"])
-	println("Finalize URL :", finalizeURL)
+	// println("Finalize URL :", finalizeURL)
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
 	z = z[pos:]
 	pos = strings.Index(z, "\"")
 	z = z[:pos]
-	println(z)
 	return resp.Header.Get("Location"), z, trimQuote(finalizeURL)
 
 }
@@ -306,7 +305,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 	}
 	defer resp.Body.Close()
 	println("HTTP result status: ", resp.Status)
-	body, err := io.ReadAll(resp.Body)
+	// body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		println(err.Error())
 		panic(err)
@@ -327,9 +326,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 func getCertificate(privateKey *rsa.PrivateKey, order_url string, authorization_url string) {
 	// GET as POST request
 
-	if !globFirstIteration {
-		time.Sleep(10 * time.Second)
-	}
+	println("authorization url: ", authorization_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("kid", authorization_url)
 	signerOpts.WithHeader("url", order_url)
