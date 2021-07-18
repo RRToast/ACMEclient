@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/x509"
+	"encoding/base64"
 	"flag"
 
 	"github.com/google/go-tpm/tpm2"
@@ -55,7 +56,7 @@ func createPublicPrivateKey() {
 	credBlob, encryptedSecret0, err := tpm2.MakeCredential(rw, parentHandle, credential, name)
 	recoveredCredential1, err := tpm2.ActivateCredential(rw, keyHandle, parentHandle, "\x01\x02\x03\x04", "", credBlob, encryptedSecret0)
 
-	println("steht hier etwas interessantes: ", string(privateBlob))
+	println("steht hier etwas interessantes: ", base64.StdEncoding.EncodeToString(recoveredCredential1))
 	println("hier steht das recovered credential: ", string(recoveredCredential1))
 	privKey, err := x509.ParsePKCS1PrivateKey(privateBlob)
 	if err != nil {
