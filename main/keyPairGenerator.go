@@ -24,7 +24,13 @@ func readCSRFromFile() {
 		println("cd tpm2-tss-engine/ Befehl konnte nicht ausgeführt werden", err.Error())
 	} */
 
-	exec.Command("script")
+	test := exec.Command("script")
+	output, err := test.Output()
+	if err != nil {
+		println("Error executing script :", err.Error())
+	} else {
+		println("output: ", string(output))
+	}
 
 	/*
 		cmdGenkey := exec.Command("tpm2tss-genkey", "-a", "rsa", "scriptKey.tss")
