@@ -28,7 +28,7 @@ func readCSRFromFile() {
 	} */
 
 	cmdGenkey := exec.Command("tpm2tss-genkey", "-a", "rsa", "scriptKey.tss")
-	cmdGenkey.Dir = "home/pi/tpm2-tss-engine/"
+	cmdGenkey.Dir = "/home/pi/tpm2-tss-engine/"
 	err := cmdGenkey.Run()
 	if err != nil {
 		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
