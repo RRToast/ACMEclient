@@ -29,6 +29,7 @@ func main() {
 	authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
 	_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
 	makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR
+	getCertificate(privateKey, order_url, authorization_url)
 
 }
 
