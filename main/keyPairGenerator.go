@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/x509"
+	"flag"
 
 	"github.com/google/go-tpm/tpm2"
 )
@@ -29,12 +30,23 @@ var (
 )
 
 func createPublicPrivateKey() {
-	rw, _ := tpm2.OpenTPM()
+	var tpmname = flag.String("tpm", "/dev/tpm0", "The path to the TPM device to use")
+	rw, err := tpm2.OpenTPM(*tpmname)
+	if err != nil {
+		println("Connection to TPM could not be established: %s", err)
+	}
+
 	defer rw.Close()
-	parentHandle, _, _ := tpm2.CreatePrimary(rw, tpm2.HandleOwner, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	parentHandle, _, err := tpm2.CreatePrimary(rw, tpm2.HandleOwner, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	if err != nil {
+		println("CreatePrimary failed: %s", err)
+	}
 	defer tpm2.FlushContext(rw, parentHandle)
 
-	privateBlob, _, _, _, _, _ := tpm2.CreateKey(rw, parentHandle, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	privateBlob, _, _, _, _, err := tpm2.CreateKey(rw, parentHandle, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	if err != nil {
+		println("CreateKey failed: %s", err)
+	}
 
 	println("steht hier etwas interessantes: ", string(privateBlob))
 	privKey, _ := x509.ParsePKCS1PrivateKey(privateBlob)
