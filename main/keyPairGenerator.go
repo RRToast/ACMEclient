@@ -1,66 +1,55 @@
 package main
 
-import (
-	"crypto/x509"
-	"encoding/base64"
-	"flag"
+import "os/exec"
 
-	"github.com/google/go-tpm/tpm2"
-)
+/*
+#!/bin/sh
+cd tpm2-tss-engine/
+tpm2tss-genkey -a rsa scriptKey.tss
+openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr
+rm scriptKey.tss
+mv scriptcsr.csr /home/pi
+*/
 
-type fiss struct {
-	number int
-}
-
-var (
-	defaultKeyParams = tpm2.Public{
-		Type:       tpm2.AlgRSA,
-		NameAlg:    tpm2.AlgSHA1,
-		Attributes: tpm2.FlagStorageDefault,
-		RSAParameters: &tpm2.RSAParams{
-			Symmetric: &tpm2.SymScheme{
-				Alg:     tpm2.AlgAES,
-				KeyBits: 128,
-				Mode:    tpm2.AlgCFB,
-			},
-			KeyBits:     2048,
-			ExponentRaw: 1<<16 + 1,
-		},
-	}
-	pcrSelection7 = tpm2.PCRSelection{Hash: tpm2.AlgSHA1, PCRs: []int{7}}
-)
-
-func createPublicPrivateKey() {
-	var tpmname = flag.String("tpm", "/dev/tpm0", "The path to the TPM device to use")
-	rw, err := tpm2.OpenTPM(*tpmname)
+func readCSRFromFile() {
+	cmdHome := exec.Command("cd", "..")
+	err := cmdHome.Run()
 	if err != nil {
-		println("Connection to TPM could not be established: %s", err)
+		println("cd .. Befehl konnte nicht ausgeführt werden", err)
 	}
 
-	defer rw.Close()
-	parentHandle, _, err := tpm2.CreatePrimary(rw, tpm2.HandleOwner, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	cmdTpm2Tss := exec.Command("cd", "tpm2-tss-engine/")
+	err = cmdTpm2Tss.Run()
 	if err != nil {
-		println("CreatePrimary failed: %s", err)
+		println("cd tpm2-tss-engine/ Befehl konnte nicht ausgeführt werden", err)
 	}
-	defer tpm2.FlushContext(rw, parentHandle)
 
-	privateBlob, publicBlob, _, _, _, err := tpm2.CreateKey(rw, parentHandle, pcrSelection7, "\x01\x02\x03\x04", "\x01\x02\x03\x04", defaultKeyParams)
+	cmdGenkey := exec.Command("tpm2tss-genkey", "-a", "rsa", "scriptKey.tss")
+	err = cmdGenkey.Run()
 	if err != nil {
-		println("CreateKey failed: %s", err)
+		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err)
 	}
 
-	keyHandle, _, err := tpm2.Load(rw, parentHandle, "", publicBlob, privateBlob)
-
-	credential := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x10}
-	_, name, _, err := tpm2.ReadPublic(rw, keyHandle)
-	credBlob, encryptedSecret0, err := tpm2.MakeCredential(rw, parentHandle, credential, name)
-	recoveredCredential1, err := tpm2.ActivateCredential(rw, keyHandle, parentHandle, "\x01\x02\x03\x04", "", credBlob, encryptedSecret0)
-
-	println("steht hier etwas interessantes: ", base64.StdEncoding.EncodeToString(recoveredCredential1))
-	println("hier steht das recovered credential: ", string(recoveredCredential1))
-	privKey, err := x509.ParsePKCS1PrivateKey(privateBlob)
+	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509" "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform engine", "-out", "scriptcsr.csr")
+	err = cmdCreateCSR.Run()
 	if err != nil {
-		println("Parsing didnt work:", err)
+		println("openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr Befehl konnte nicht ausgeführt werden", err)
 	}
-	println("Wie sieht es nach dem Encode aus?: ", privKey)
+
+	cmdCleanup := exec.Command("rm", "scriptKey.tss")
+	err = cmdCleanup.Run()
+	if err != nil {
+		println("rm scriptKey.tss Befehl konnte nicht ausgeführt werden", err)
+	}
+
+	cmdMoveFile := exec.Command("mv", "scriptcsr.csr", "/home/pi/ACMEclinet")
+	err = cmdMoveFile.Run()
+	if err != nil {
+		println("mv scriptcsr.csr /home/pi Befehl konnte nicht ausgeführt werden", err)
+	}
+
+	if _, err := os.Stat("scriptcsr.csr"); os.IsNotExist(err) {
+		println(" scriptcsr.csr does not exist")
+	  }
+
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"net/http"
 )
@@ -16,18 +14,20 @@ type Message struct {
 
 func main() {
 	println("start")
-	createPublicPrivateKey()
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		panic(err)
-	}
+	readCSRFromFile()
 
-	order_url := newAccount(privateKey)                                                // Create Account
-	_, authorization_url, finalizeURL := newCertificate(privateKey, order_url)         // Create Order
-	secret, answer_url, dns := authChallenge(privateKey, order_url, authorization_url) // Get(Request) Challenge
-	authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
-	_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
-	makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR
+	/*
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			panic(err)
+		}
+
+		order_url := newAccount(privateKey)                                                // Create Account
+		_, authorization_url, finalizeURL := newCertificate(privateKey, order_url)         // Create Order
+		secret, answer_url, dns := authChallenge(privateKey, order_url, authorization_url) // Get(Request) Challenge
+		authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
+		_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
+		makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR */
 
 }
 
