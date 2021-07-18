@@ -1,6 +1,9 @@
 package main
 
-import "os/exec"
+import (
+	"os"
+	"os/exec"
+)
 
 /*
 #!/bin/sh
@@ -30,7 +33,7 @@ func readCSRFromFile() {
 		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err)
 	}
 
-	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509" "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform engine", "-out", "scriptcsr.csr")
+	cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform engine", "-out", "scriptcsr.csr")
 	err = cmdCreateCSR.Run()
 	if err != nil {
 		println("openssl req -new -x509 -engine tpm2tss -key scriptKey.tss -keyform engine -out scriptcsr.csr Befehl konnte nicht ausgeführt werden", err)
@@ -50,6 +53,6 @@ func readCSRFromFile() {
 
 	if _, err := os.Stat("scriptcsr.csr"); os.IsNotExist(err) {
 		println(" scriptcsr.csr does not exist")
-	  }
+	}
 
 }
