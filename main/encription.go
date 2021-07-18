@@ -326,7 +326,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 func createCSR(dns string) (csr string) {
-	//keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
+	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
 
 	emailAddress := "test@example.com"
 	subj := pkix.Name{
@@ -348,9 +348,7 @@ func createCSR(dns string) (csr string) {
 		EmailAddresses:     []string{emailAddress},
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
-	println("ist das hier der public part? :", string(globAk.AttestationParameters().Public))
-
-	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, globAk.AttestationParameters().Public)
+	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
 	encode := base.NewEncoding("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
 	println("csr sieht so aus :", encode.EncodeToString(csrBytes))
 	return encode.EncodeToString(csrBytes)
