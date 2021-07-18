@@ -43,12 +43,23 @@ func createPublicPrivateKey() {
 	}
 	defer tpm2.FlushContext(rw, parentHandle)
 
-	privateBlob, _, _, _, _, err := tpm2.CreateKey(rw, parentHandle, pcrSelection7, "", "\x01\x02\x03\x04", defaultKeyParams)
+	privateBlob, publicBlob, _, _, _, err := tpm2.CreateKey(rw, parentHandle, pcrSelection7, "\x01\x02\x03\x04", "\x01\x02\x03\x04", defaultKeyParams)
 	if err != nil {
 		println("CreateKey failed: %s", err)
 	}
 
+	keyHandle, _, err := tpm2.Load(rw, parentHandle, "", publicBlob, privateBlob)
+
+	credential := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x10}
+	_, name, _, err := tpm2.ReadPublic(rw, keyHandle)
+	credBlob, encryptedSecret0, err := tpm2.MakeCredential(rw, parentHandle, credential, name)
+	recoveredCredential1, err := tpm2.ActivateCredential(rw, keyHandle, parentHandle, "\x01\x02\x03\x04", "", credBlob, encryptedSecret0)
+
 	println("steht hier etwas interessantes: ", string(privateBlob))
-	privKey, _ := x509.ParsePKCS1PrivateKey(privateBlob)
+	println("hier steht das recovered credential: ", string(recoveredCredential1))
+	privKey, err := x509.ParsePKCS1PrivateKey(privateBlob)
+	if err != nil {
+		println("Parsing didnt work:", err)
+	}
 	println("Wie sieht es nach dem Encode aus?: ", privKey)
 }
