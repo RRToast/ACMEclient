@@ -329,6 +329,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 func createCSR(dns string) (csr string) {
+	println("DNS value ist: ", dns)
 	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
 
 	emailAddress := "test@example.com"
@@ -354,10 +355,7 @@ func createCSR(dns string) (csr string) {
 
 	csrBytes, _ := x509.CreateCertificateRequest(rand.Reader, &template, keyBytes)
 	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
-	v1 := base64.RawStdEncoding.EncodeToString(csrBytes)
 	v2 := base64.RawURLEncoding.EncodeToString(csrBytes)
-	println("Value 1, Encoded as RawSTD", v1)
-	println("Value 1, Encoded as RawURL", v2)
 	return v2
 }
 
