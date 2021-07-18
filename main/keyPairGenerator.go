@@ -1,8 +1,6 @@
 package main
 
-import (
-	"os/exec"
-)
+import "os/exec"
 
 /*
 #!/bin/sh
@@ -26,22 +24,26 @@ func readCSRFromFile() {
 		println("cd tpm2-tss-engine/ Befehl konnte nicht ausgeführt werden", err.Error())
 	} */
 
-	cmdGenkey := exec.Command("tpm2tss-genkey", "-a", "rsa", "scriptKey.tss")
-	cmdGenkey.Dir = "/home/pi/tpm2-tss-engine/"
-	err := cmdGenkey.Run()
-	if err != nil {
-		println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
-	}
+	exec.Command("script")
 
-	commands := []string{"openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr"}
-	dir := "/home/pi/tpm2-tss-engine/"
+	/*
+		cmdGenkey := exec.Command("tpm2tss-genkey", "-a", "rsa", "scriptKey.tss")
+		cmdGenkey.Dir = "/home/pi/tpm2-tss-engine/"
+		err := cmdGenkey.Run()
+		if err != nil {
+			println("tpm2tss-genkey -a rsa scriptKey.tss Befehl konnte nicht ausgeführt werden", err.Error())
+		}
 
-	cmd := exec.Cmd{Args: commands, Dir: dir}
-	err = cmd.Run()
-	println("Run error : ", err.Error())
-	value, err := cmd.Output()
-	println("Output error ist :", err.Error())
-	println("value :", string(value))
+		commands := []string{"openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr"}
+		dir := "/home/pi/tpm2-tss-engine/"
+
+		cmd := exec.Cmd{Args: commands, Dir: dir}
+		err = cmd.Run()
+		println("Run error : ", err.Error())
+		value, err := cmd.Output()
+		println("Output error ist :", err.Error())
+		println("value :", string(value)) */
+
 	/*
 		cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr")
 		cmdCreateCSR.Dir = "/home/pi/tpm2-tss-engine/"
