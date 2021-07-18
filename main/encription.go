@@ -334,7 +334,7 @@ func createCSR(dns string) (csr string) {
 
 	emailAddress := "test@example.com"
 	subj := pkix.Name{
-		CommonName:         "example.com",
+		CommonName:         dns,
 		Country:            []string{"AU"},
 		Province:           []string{"Some-State"},
 		Locality:           []string{"MyCity"},
@@ -348,6 +348,7 @@ func createCSR(dns string) (csr string) {
 
 	asn1Subj, _ := asn1.Marshal(rawSubj)
 	template := x509.CertificateRequest{
+		DNSNames:           []string{dns},
 		RawSubject:         asn1Subj,
 		EmailAddresses:     []string{emailAddress},
 		SignatureAlgorithm: x509.SHA256WithRSA,
