@@ -37,8 +37,10 @@ func readCSRFromFile() {
 	dir := "/home/pi/tpm2-tss-engine/"
 
 	cmd := exec.Cmd{Args: commands, Dir: dir}
-	cmd.Run()
+	err = cmd.Run()
+	println("Run error : ", err.Error())
 	value, err := cmd.Output()
+	println("Output error ist :", err.Error())
 	println("value :", string(value))
 	/*
 		cmdCreateCSR := exec.Command("openssl", "req", "-new", "-x509", "-engine", "tpm2tss", "-key", "scriptKey.tss", "-keyform", "engine", "-out", "scriptcsr.csr")
