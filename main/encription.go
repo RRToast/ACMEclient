@@ -373,7 +373,7 @@ func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_u
 	// GET as POST request
 
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	signerOpts.WithHeader("kid", order_url)
+	signerOpts.WithHeader("kid", account_url)
 	signerOpts.WithHeader("url", order_url)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
