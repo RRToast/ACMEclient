@@ -420,10 +420,10 @@ func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_u
 	globNonce = resp.Header.Get("Replay-Nonce")
 	url := string(m["orders"])
 	println("URL :", url)
-	pos := strings.Index(url, "://")
+	pos := strings.Index(url, "\"")
 	poss := strings.Index(url, "]")
 	url = url[pos+3 : poss-1]
-	println("URL shortend :", url)
+	println("URL shortend:", url)
 	return ""
 
 }
