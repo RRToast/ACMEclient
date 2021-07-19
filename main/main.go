@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"net/http"
 )
@@ -21,21 +19,18 @@ func main() {
 	if testmode {
 		//teeeest()
 	} else {
-		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			panic(err)
-		}
+		// privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
-		account_url := newAccount(privateKey)                                                // Create Account
-		_, authorization_url, finalizeURL := newCertificate(privateKey, account_url)         // Create Order
-		secret, answer_url, dns := authChallenge(privateKey, account_url, authorization_url) // Get(Request) Challenge
-		authChallengeAnswer(privateKey, account_url, answer_url, secret)                     // answer Challenge
-		_, _, _ = authChallenge(privateKey, account_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
-		makeCSRRequest(privateKey, account_url, dns, finalizeURL)                            // request a Certifikat using CSR
-		order_url := getCertificate(privateKey, account_url)
-		new_order_url := downloadCertificate(privateKey, order_url, account_url)
-		certificate_url := downloadCertificate2(privateKey, new_order_url, account_url)
-		downloadCertificate3(privateKey, certificate_url, account_url)
+		account_url := newAccount()                                                                             // Create Account
+		_, authorization_url, finalizeURL := newCertificate("https://192.168.1.2:14000/order-plz", account_url) // Create Order
+		secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
+		authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge
+		_, _, _ = authChallenge(account_url, authorization_url)                                                 // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
+		makeCSRRequest(account_url, dns, finalizeURL)                                                           // request a Certifikat using CSR
+		order_url := getCertificate(account_url)
+		new_order_url := downloadCertificate(order_url, account_url)
+		certificate_url := downloadCertificate2(new_order_url, account_url)
+		downloadCertificate3(certificate_url, account_url)
 	}
 }
 
