@@ -422,7 +422,7 @@ func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_u
 	println("URL :", url)
 	pos := strings.Index(url, "\"")
 	poss := strings.Index(url, "]")
-	url = url[pos+1 : poss-1]
+	url = url[pos+1 : poss-2]
 	println("URL shortend:", url)
 	return url
 
