@@ -26,13 +26,13 @@ func main() {
 			panic(err)
 		}
 
-		order_url := newAccount(privateKey)                                                // Create Account
-		_, authorization_url, finalizeURL := newCertificate(privateKey, order_url)         // Create Order
-		secret, answer_url, dns := authChallenge(privateKey, order_url, authorization_url) // Get(Request) Challenge
-		authChallengeAnswer(privateKey, order_url, answer_url, secret)                     // answer Challenge
-		_, _, _ = authChallenge(privateKey, order_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
-		makeCSRRequest(privateKey, order_url, dns, finalizeURL)                            // request a Certifikat using CSR
-		getCertificate(privateKey, order_url, authorization_url)
+		account_url := newAccount(privateKey)                                                // Create Account
+		_, authorization_url, finalizeURL := newCertificate(privateKey, account_url)         // Create Order
+		secret, answer_url, dns := authChallenge(privateKey, account_url, authorization_url) // Get(Request) Challenge
+		authChallengeAnswer(privateKey, account_url, answer_url, secret)                     // answer Challenge
+		_, _, _ = authChallenge(privateKey, account_url, authorization_url)                  // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
+		makeCSRRequest(privateKey, account_url, dns, finalizeURL)                            // request a Certifikat using CSR
+		getCertificate(privateKey, account_url, authorization_url)
 	}
 }
 

@@ -33,7 +33,7 @@ type Identifier struct {
 	Value string
 }
 
-func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
+func newAccount(privateKey *rsa.PrivateKey) (account_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("jwk", jose.JSONWebKey{Key: privateKey.Public()})
 	signerOpts.WithHeader("url", "https://192.168.1.2:14000/sign-me-up")
@@ -88,9 +88,9 @@ func newAccount(privateKey *rsa.PrivateKey) (order_url string) {
 	return resp.Header.Get("Location")
 }
 
-func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
+func newCertificate(privateKey *rsa.PrivateKey, account_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	signerOpts.WithHeader("kid", order_url)
+	signerOpts.WithHeader("kid", account_url)
 	signerOpts.WithHeader("url", "https://192.168.1.2:14000/order-plz")
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
@@ -112,7 +112,6 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
@@ -135,8 +134,7 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 		println(err.Error())
 		panic(err)
 	}
-	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	//println("HTTP result body NewCertificate: ", string(body))
+	println("HTTP result body NewCertificate: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -147,7 +145,6 @@ func newCertificate(privateKey *rsa.PrivateKey, order_url string) (auth_order_ur
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	finalizeURL = string(m["finalize"])
-	// println("Finalize URL :", finalizeURL)
 	z := string(m["authorizations"])
 	pos := strings.Index(z, "https:")
 	z = z[pos:]
@@ -178,7 +175,6 @@ func authChallenge(privateKey *rsa.PrivateKey, auth_order_url string, authorizat
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
@@ -235,7 +231,6 @@ func authChallengeAnswer(privateKey *rsa.PrivateKey, auth_order_url string, answ
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
@@ -288,7 +283,6 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
@@ -323,14 +317,12 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 
 }
 
-func getCertificate(privateKey *rsa.PrivateKey, order_url string, authorization_url string) {
+func getCertificate(privateKey *rsa.PrivateKey, account_url string, authorization_url string) {
 	// GET as POST request
 
-	println("authorization url: ", authorization_url)
-	println("order URL", order_url)
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
-	signerOpts.WithHeader("kid", order_url)
-	signerOpts.WithHeader("url", order_url)
+	signerOpts.WithHeader("kid", account_url)
+	signerOpts.WithHeader("url", account_url)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
 	if err != nil {
 		panic(err)
@@ -343,14 +335,13 @@ func getCertificate(privateKey *rsa.PrivateKey, order_url string, authorization_
 	}
 
 	serialized := object.FullSerialize()
-	// println("Payload: ", serialized)
 
 	tlsConfig := &tls.Config{}
 	tlsConfig.InsecureSkipVerify = true
 	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
 
-	req, err := http.NewRequest("POST", order_url, strings.NewReader(serialized))
+	req, err := http.NewRequest("POST", account_url, strings.NewReader(serialized))
 	req.Header.Add("Content-Type", "application/jose+json")
 
 	resp, err := client.Do(req)
@@ -380,7 +371,6 @@ func getCertificate(privateKey *rsa.PrivateKey, order_url string, authorization_
 var oidEmailAddress = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
 func createCSR(dns string) (csr string) {
-	// println("DNS value ist: ", dns)
 	keyBytes, _ := rsa.GenerateKey(rand.Reader, 1024)
 
 	emailAddress := "test@example.com"
@@ -431,12 +421,6 @@ func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl
 	pos = strings.Index(ois[6], "\"DNS\":")
 	poss = strings.Index(ois[6], "}")
 	dns = ois[6][pos+8 : poss-8]
-
-	/* 	println("Meine URL: ", url)
-	   	println("Mein Token: ", token)
-	   	println("Mein Credentail:", Credentail)
-	   	println("Mein Secret:", Secret) */
-	// println("DNS Value ist:", dns)
 
 	return solveEkSecret(Credentail, Secret), url, trimQuote(dns)
 }
