@@ -196,7 +196,7 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("GET as POST request to download Certificate")
+	println("download Certificate 1")
 	println("HTTP result body: ", string(body))
 	println("")
 
@@ -220,8 +220,8 @@ func downloadCertificate2(order_url string, account_url string) (certificate_url
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("GET as POST request for Certificate send")
-	//println("HTTP result body: ", string(body))
+	println("download Certificate 2")
+	println("HTTP result body: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -241,12 +241,14 @@ func downloadCertificate3(certificate_url string, account_url string) {
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, certificate_url, byts)
-	println("GET as POST request for Certificate send")
-	println("HTTP result body: ", string(body))
+	println("GET as POST request to retreive Certificate")
+	// println("HTTP result body: ", string(body))
 	println("")
 
 	err := ioutil.WriteFile("Certificate", body, 0644)
-	println("could not write Certificate: ", err.Error())
+	if err != nil {
+		println("could not write Certificate: ", err.Error())
+	}
 }
 
 func sendRequest(kid string, url string, byts []byte) (body []byte, resp *http.Response) {
