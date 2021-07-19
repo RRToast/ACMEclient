@@ -365,6 +365,7 @@ func getCertificate(privateKey *rsa.PrivateKey, account_url string, authorizatio
 		println(err.Error())
 		panic(err)
 	}
+	println("hier sollte die Order URL stehen:", m["orders"])
 	globNonce = resp.Header.Get("Replay-Nonce")
 }
 
