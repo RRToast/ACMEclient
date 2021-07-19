@@ -134,7 +134,7 @@ func newCertificate(privateKey *rsa.PrivateKey, account_url string) (auth_order_
 		println(err.Error())
 		panic(err)
 	}
-	println("HTTP result body NewCertificate: ", string(body))
+	// println("HTTP result body NewCertificate: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -357,7 +357,7 @@ func getCertificate(privateKey *rsa.PrivateKey, account_url string) (order_url s
 		panic(err)
 	}
 	println("GET as POST request for Certificate send")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
@@ -369,7 +369,61 @@ func getCertificate(privateKey *rsa.PrivateKey, account_url string) (order_url s
 	return trimQuote(string(m["orders"]))
 }
 
-func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_url string) {
+func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_url string) (new_order_url string) {
+	// GET as POST request
+
+	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
+	signerOpts.WithHeader("kid", account_url)
+	signerOpts.WithHeader("url", order_url)
+	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: privateKey}, &signerOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	byts := []byte{}
+	object, err := signer.Sign(byts)
+	if err != nil {
+		panic(err)
+	}
+
+	serialized := object.FullSerialize()
+
+	tlsConfig := &tls.Config{}
+	tlsConfig.InsecureSkipVerify = true
+	tr := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: tr}
+
+	req, err := http.NewRequest("POST", order_url, strings.NewReader(serialized))
+	req.Header.Add("Content-Type", "application/jose+json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	defer resp.Body.Close()
+	println("HTTP result status: ", resp.Status)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	println("GET as POST request for Certificate send")
+	println("HTTP result body: ", string(body))
+	println("")
+	m := make(map[string]json.RawMessage)
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		println(err.Error())
+		panic(err)
+	}
+	globNonce = resp.Header.Get("Replay-Nonce")
+	println("new orders url:", string(m["orders"]))
+	return ""
+
+}
+
+func downloadCertificate2(privateKey *rsa.PrivateKey, order_url string, account_url string) {
 	// GET as POST request
 
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
