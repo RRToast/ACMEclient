@@ -408,7 +408,7 @@ func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_u
 		println(err.Error())
 		panic(err)
 	}
-	println("GET as POST request for Certificate send")
+	println("GET as POST request to download Certificate")
 	println("HTTP result body: ", string(body))
 	println("")
 	m := make(map[string]json.RawMessage)
@@ -418,7 +418,12 @@ func downloadCertificate(privateKey *rsa.PrivateKey, order_url string, account_u
 		panic(err)
 	}
 	globNonce = resp.Header.Get("Replay-Nonce")
-	println("new orders url:", string(m["orders"]))
+	url := string(m["orders"])
+	println("URL :", url)
+	pos := strings.Index(url, "://")
+	poss := strings.Index(url, "]")
+	url = url[pos+3 : poss-1]
+	println("URL shortend :", url)
 	return ""
 
 }
