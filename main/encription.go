@@ -16,7 +16,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/google/go-attestation/attest"
 	jose "gopkg.in/square/go-jose.v2"
@@ -25,7 +24,6 @@ import (
 var globNonce = ""
 var globAk = attest.AK{}
 var globTPM = attest.TPM{}
-var globFirstIteration = true
 var globPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 
 type dummyNonceSource struct{}
@@ -35,7 +33,7 @@ type Identifier struct {
 	Value string
 }
 
-func newAccount(signMeUpURL string) (account_url string) {
+func newAccount(signMeUpURL string) (account_url string, order_list_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("jwk", jose.JSONWebKey{Key: globPrivateKey.Public()})
 	signerOpts.WithHeader("url", signMeUpURL)
@@ -77,7 +75,7 @@ func newAccount(signMeUpURL string) (account_url string) {
 		panic(err)
 	}
 	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -89,7 +87,7 @@ func newAccount(signMeUpURL string) (account_url string) {
 	println("")
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
-	return resp.Header.Get("Location")
+	return resp.Header.Get("Location"), trimQuote(string(m["orders"]))
 }
 
 func newCertificate(request_url string, account_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
@@ -105,7 +103,7 @@ func newCertificate(request_url string, account_url string) (auth_order_url stri
 
 	body, resp := sendRequest(account_url, request_url, byts)
 	println("newCertificate: New Certificate requested!")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -130,14 +128,10 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 	println("authorization_url: ", authorization_url)
 	// GET as POST request
 
-	if !globFirstIteration {
-		time.Sleep(10 * time.Second)
-	}
-
 	byts := []byte{}
 	body, _ := sendRequest(auth_order_url, authorization_url, byts)
 	println("authChallenge: GET-as-POST request to retreive challange details")
-	println("HTTP result body: ", string(body))
+	//println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -148,12 +142,7 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 		println(err.Error())
 		panic(err)
 	}
-	if globFirstIteration {
-		return extractUrlSecretDNS(m)
-	} else {
-		return "", "", ""
-	}
-
+	return extractUrlSecretDNS(m)
 }
 
 func authChallengeAnswer(auth_order_url string, answer_url string, secret string) {
@@ -161,9 +150,9 @@ func authChallengeAnswer(auth_order_url string, answer_url string, secret string
 	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 
-	body, _ := sendRequest(auth_order_url, answer_url, byts)
+	sendRequest(auth_order_url, answer_url, byts)
 	println("authChallengeAnswer: Challenge answer was send!")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -175,9 +164,9 @@ func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
 	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 
-	body, _ := sendRequest(auth_order_url, finalizeURL, byts)
+	sendRequest(auth_order_url, finalizeURL, byts)
 	println("makeCSRRequest: CSR Request send!")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -190,7 +179,7 @@ func getCertificate(account_url string) (order_url string) {
 
 	body, _ := sendRequest(account_url, account_url, byts)
 	println("getCertificate: GET-as-POST request for the Certificate!")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -211,7 +200,7 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 
 	body, _ := sendRequest(account_url, order_url, byts)
 	println("downloadCertificate: 1 iteration")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -237,7 +226,7 @@ func downloadCertificate2(order_url string, account_url string) (certificate_url
 
 	body, _ := sendRequest(account_url, order_url, byts)
 	println("downloadCertificate: 2 iteration")
-	println("HTTP result body: ", string(body))
+	// println("HTTP result body: ", string(body))
 	println("")
 	println("")
 	println("")
@@ -344,7 +333,6 @@ func createCSR(dns string) (csr string) {
 }
 
 func extractUrlSecretDNS(m map[string]json.RawMessage) (secret string, answerUrl string, dns string) {
-	globFirstIteration = false
 	ois := strings.Split(string(m["challenges"]), ",")
 
 	pos := strings.Index(ois[1], "\"url\":")

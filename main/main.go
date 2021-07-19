@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"net/http"
+	"time"
 )
 
 type Message struct {
@@ -19,18 +20,15 @@ func main() {
 	if testmode {
 		//teeeest()
 	} else {
-		// privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-
-		account_url := newAccount("https://192.168.1.2:14000/sign-me-up")                                       // Create Account
+		account_url, order_list_url := newAccount("https://192.168.1.2:14000/sign-me-up")                       // Create Account
 		_, authorization_url, finalizeURL := newCertificate("https://192.168.1.2:14000/order-plz", account_url) // Create Order
 		secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
 		authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge
-		_, _, _ = authChallenge(account_url, authorization_url)                                                 // Get(Request) Overview if status is valid (not yet implemented just for visual feedback)
+		time.Sleep(10 * time.Second)                                                                            // rest to let server update order Status
 		makeCSRRequest(account_url, dns, finalizeURL)                                                           // request a Certifikat using CSR
-		order_url := getCertificate(account_url)
-		new_order_url := downloadCertificate(order_url, account_url)
-		certificate_url := downloadCertificate2(new_order_url, account_url)
-		downloadCertificate3(certificate_url, account_url)
+		new_order_url := downloadCertificate(order_list_url, account_url)                                       // Get(Request) the order Element
+		certificate_url := downloadCertificate2(new_order_url, account_url)                                     // Get(Request) extract the Certifikate URL from Order
+		downloadCertificate3(certificate_url, account_url)                                                      // Get(Request) Certifikate
 	}
 }
 
