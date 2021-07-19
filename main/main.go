@@ -35,7 +35,7 @@ func main() {
 		order_url := getCertificate(privateKey, account_url)
 		new_order_url := downloadCertificate(privateKey, order_url, account_url)
 		certificate_url := downloadCertificate2(privateKey, new_order_url, account_url)
-		downloadCertificate3(privateKey, certificate_url, authorization_url)
+		downloadCertificate3(privateKey, certificate_url, account_url)
 	}
 }
 
