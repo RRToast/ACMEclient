@@ -17,9 +17,9 @@ type Message struct {
 func main() {
 	println("start")
 
-	testmode := true
+	testmode := false
 	if testmode {
-		teeeest()
+		//teeeest()
 	} else {
 		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {

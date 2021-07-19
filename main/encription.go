@@ -279,7 +279,7 @@ func makeCSRRequest(privateKey *rsa.PrivateKey, auth_order_url string, dns strin
 		panic(err)
 	}
 
-	payload := map[string]interface{}{"csr": createCSR(dns)}
+	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 	signer.Options()
 	object, err := signer.Sign(byts)

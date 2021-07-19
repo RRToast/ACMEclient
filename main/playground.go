@@ -6,8 +6,10 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
+	"os"
 
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -39,7 +41,7 @@ go run src/csr/csr.go  -v 20 -alsologtostderr
 var (
 	tpmPath    = flag.String("tpm-path", "/dev/tpm0", "Path to the TPM device (character device or a Unix socket).")
 	san        = flag.String("dnsSAN", "server.domain.com", "DNS SAN Value for cert")
-	pemCSRFile = flag.String("pemCSRFile", "certs/client.csr", "CSR File to write to")
+	pemCSRFile = flag.String("pemCSRFile", "client.csr", "CSR File to write to")
 	keyFile    = flag.String("keyFile", "k.bin", "TPM KeyFile")
 
 	handleNames = map[string][]tpm2.HandleType{
@@ -64,7 +66,7 @@ var (
 	}
 )
 
-func teeeest() {
+func teeeestcreateCSR(dns string) (csr string) {
 
 	flag.Parse()
 	glog.V(2).Infof("======= Init  ========")
@@ -137,9 +139,9 @@ func teeeest() {
 			Locality:           []string{"Mountain View"},
 			Province:           []string{"California"},
 			Country:            []string{"US"},
-			CommonName:         *san,
+			CommonName:         dns,
 		},
-		DNSNames:           []string{*san},
+		DNSNames:           []string{dns},
 		SignatureAlgorithm: x509.SHA256WithRSAPSS,
 	}
 
@@ -148,18 +150,22 @@ func teeeest() {
 		glog.Fatalf("Failed to create CSR: %s", err)
 	}
 
-	pemdata := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "CERTIFICATE REQUEST",
-			Bytes: csrBytes,
-		},
-	)
-	glog.V(2).Infof("CSR \b%s\n", string(pemdata))
+	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	v2 := base64.RawURLEncoding.EncodeToString(csrBytes)
+	return v2
 
-	err = ioutil.WriteFile(*pemCSRFile, pemdata, 0644)
-	if err != nil {
-		glog.Fatalf("Could not write file %v", err)
-	}
-	glog.V(2).Infof("CSR written to: %s", pemCSRFile)
+	/* 	pemdata := pem.EncodeToMemory(
+	   		&pem.Block{
+	   			Type:  "CERTIFICATE REQUEST",
+	   			Bytes: csrBytes,
+	   		},
+	   	)
+	   	glog.V(2).Infof("CSR \b%s\n", string(pemdata))
+
+	   	err = ioutil.WriteFile(*pemCSRFile, pemdata, 0644)
+	   	if err != nil {
+	   		glog.Fatalf("Could not write file %v", err)
+	   	}
+	   	glog.V(2).Infof("CSR written to: %s", pemCSRFile) */
 
 }
