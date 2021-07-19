@@ -21,7 +21,7 @@ func main() {
 	} else {
 		// privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
-		account_url := newAccount()                                                                             // Create Account
+		account_url := newAccount("https://192.168.1.2:14000/sign-me-up")                                       // Create Account
 		_, authorization_url, finalizeURL := newCertificate("https://192.168.1.2:14000/order-plz", account_url) // Create Order
 		secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
 		authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge

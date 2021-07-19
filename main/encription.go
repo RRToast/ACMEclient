@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -34,10 +35,10 @@ type Identifier struct {
 	Value string
 }
 
-func newAccount() (account_url string) {
+func newAccount(signMeUpURL string) (account_url string) {
 	var signerOpts = jose.SignerOptions{NonceSource: dummyNonceSource{}}
 	signerOpts.WithHeader("jwk", jose.JSONWebKey{Key: globPrivateKey.Public()})
-	signerOpts.WithHeader("url", "https://192.168.1.2:14000/sign-me-up")
+	signerOpts.WithHeader("url", signMeUpURL)
 	signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: globPrivateKey}, &signerOpts)
 	if err != nil {
 		panic(err)
@@ -60,7 +61,7 @@ func newAccount() (account_url string) {
 	tr := &http.Transport{TLSClientConfig: tlsConfig}
 	client := &http.Client{Transport: tr}
 
-	req, err := http.NewRequest("POST", "https://192.168.1.2:14000/sign-me-up", strings.NewReader(serialized))
+	req, err := http.NewRequest("POST", signMeUpURL, strings.NewReader(serialized))
 	req.Header.Add("Content-Type", "application/jose+json")
 
 	resp, err := client.Do(req)
@@ -90,6 +91,7 @@ func newAccount() (account_url string) {
 }
 
 func newCertificate(request_url string, account_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
+	println("auth_order_url: ", request_url)
 	EkValue, AkValue, tpmm := getAttestAndEndorseKey()
 	globAk = AkValue
 	globTPM = tpmm
@@ -120,6 +122,7 @@ func newCertificate(request_url string, account_url string) (auth_order_url stri
 }
 
 func authChallenge(auth_order_url string, authorization_url string) (secret string, answerUrl string, dns string) {
+	println("auth_order_url: ", auth_order_url)
 	// GET as POST request
 
 	if !globFirstIteration {
@@ -146,6 +149,7 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 }
 
 func authChallengeAnswer(auth_order_url string, answer_url string, secret string) {
+	println("auth_order_url: ", auth_order_url)
 	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 
@@ -157,6 +161,7 @@ func authChallengeAnswer(auth_order_url string, answer_url string, secret string
 }
 
 func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
+	println("auth_order_url: ", auth_order_url)
 	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 
@@ -167,6 +172,7 @@ func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
 }
 
 func getCertificate(account_url string) (order_url string) {
+	println("account_url: ", account_url)
 	// GET as POST request
 	byts := []byte{}
 
@@ -185,6 +191,7 @@ func getCertificate(account_url string) (order_url string) {
 }
 
 func downloadCertificate(order_url string, account_url string) (new_order_url string) {
+	println("account_url: ", account_url)
 	// GET as POST request
 	byts := []byte{}
 
@@ -208,6 +215,7 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 }
 
 func downloadCertificate2(order_url string, account_url string) (certificate_url string) {
+	println("account_url: ", account_url)
 	// GET as POST request
 	byts := []byte{}
 
@@ -228,6 +236,7 @@ func downloadCertificate2(order_url string, account_url string) (certificate_url
 }
 
 func downloadCertificate3(certificate_url string, account_url string) {
+	println("Certificate URL: ", certificate_url)
 	// GET as POST request
 	byts := []byte{}
 
@@ -235,6 +244,9 @@ func downloadCertificate3(certificate_url string, account_url string) {
 	println("GET as POST request for Certificate send")
 	println("HTTP result body: ", string(body))
 	println("")
+
+	err := ioutil.WriteFile("Certificate", body, 0644)
+	println("could not write Certificate: ", err.Error())
 }
 
 func sendRequest(kid string, url string, byts []byte) (body []byte, resp *http.Response) {
