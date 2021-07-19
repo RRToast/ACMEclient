@@ -127,7 +127,7 @@ func newCertificate(request_url string, account_url string) (auth_order_url stri
 }
 
 func authChallenge(auth_order_url string, authorization_url string) (secret string, answerUrl string, dns string) {
-	println("auth_order_url: ", auth_order_url)
+	println("authorization_url: ", authorization_url)
 	// GET as POST request
 
 	if !globFirstIteration {
@@ -157,7 +157,7 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 }
 
 func authChallengeAnswer(auth_order_url string, answer_url string, secret string) {
-	println("auth_order_url: ", auth_order_url)
+	println("answer_url: ", answer_url)
 	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 
@@ -171,7 +171,7 @@ func authChallengeAnswer(auth_order_url string, answer_url string, secret string
 }
 
 func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
-	println("auth_order_url: ", auth_order_url)
+	println("finalizeURL: ", finalizeURL)
 	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 
@@ -205,7 +205,7 @@ func getCertificate(account_url string) (order_url string) {
 }
 
 func downloadCertificate(order_url string, account_url string) (new_order_url string) {
-	println("account_url: ", account_url)
+	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
 
