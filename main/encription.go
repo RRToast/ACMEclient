@@ -77,14 +77,16 @@ func newAccount(signMeUpURL string) (account_url string) {
 		panic(err)
 	}
 	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	//println("HTTP result body: ", string(body))
+	println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		println(err.Error())
 		panic(err)
 	}
-	println("Account created")
+	println("newAccount: Account created!")
+	println("")
+	println("")
 	println("")
 	globNonce = resp.Header.Get("Replay-Nonce")
 	return resp.Header.Get("Location")
@@ -102,7 +104,10 @@ func newCertificate(request_url string, account_url string) (auth_order_url stri
 	byts, _ := json.Marshal(payload)
 
 	body, resp := sendRequest(account_url, request_url, byts)
-	println("NewCertificate requested")
+	println("newCertificate: New Certificate requested!")
+	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -131,7 +136,10 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 
 	byts := []byte{}
 	body, _ := sendRequest(auth_order_url, authorization_url, byts)
-	println("GET as POST request for Challenge Details send")
+	println("authChallenge: GET-as-POST request to retreive challange details")
+	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -153,9 +161,11 @@ func authChallengeAnswer(auth_order_url string, answer_url string, secret string
 	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 
-	sendRequest(auth_order_url, answer_url, byts)
-	println("Challenge answer was send")
-	//println("HTTP result body: ", string(body))
+	body, _ := sendRequest(auth_order_url, answer_url, byts)
+	println("authChallengeAnswer: Challenge answer was send!")
+	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 }
@@ -165,9 +175,11 @@ func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
 	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 
-	sendRequest(auth_order_url, finalizeURL, byts)
-	println("CSR Request send")
-	//println("HTTP result body: ", string(body))
+	body, _ := sendRequest(auth_order_url, finalizeURL, byts)
+	println("makeCSRRequest: CSR Request send!")
+	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 }
 
@@ -177,8 +189,10 @@ func getCertificate(account_url string) (order_url string) {
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, account_url, byts)
-	println("GET as POST request for Certificate send")
-	// println("HTTP result body: ", string(body))
+	println("getCertificate: GET-as-POST request for the Certificate!")
+	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -196,8 +210,10 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("download Certificate 1")
+	println("downloadCertificate: 1 iteration")
 	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -215,13 +231,15 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 }
 
 func downloadCertificate2(order_url string, account_url string) (certificate_url string) {
-	println("account_url: ", account_url)
+	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("download Certificate 2")
+	println("downloadCertificate: 2 iteration")
 	println("HTTP result body: ", string(body))
+	println("")
+	println("")
 	println("")
 
 	m := make(map[string]json.RawMessage)
