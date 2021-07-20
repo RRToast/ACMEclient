@@ -25,11 +25,19 @@ func main() {
 		secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
 		authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge
 		time.Sleep(10 * time.Second)                                                                            // rest to let server update order Status
-		makeCSRRequest(account_url, dns, finalizeURL)                                                           // request a Certifikat using CSR
-		new_order_url := downloadCertificate(order_list_url, account_url)                                       // Get(Request) the order Element
-		certificate_url := downloadCertificate2(new_order_url, account_url)                                     // Get(Request) extract the Certifikate URL from Order
-		downloadCertificate3(certificate_url, account_url)                                                      // Get(Request) Certifikate
+		waitForServerToUpdateStatus(account_url, authorization_url)
+		//TODO pooling verwenden
+		makeCSRRequest(account_url, dns, finalizeURL)                       // request a Certifikat using CSR
+		new_order_url := downloadCertificate(order_list_url, account_url)   // Get(Request) the order Element
+		certificate_url := downloadCertificate2(new_order_url, account_url) // Get(Request) extract the Certificate URL from Order
+		downloadCertificate3(certificate_url, account_url)                  // Get(Request) Certifikate
 	}
+}
+
+func waitForServerToUpdateStatus(account_url string, authorization_url string) {
+	// valid := false
+	authChallenge(account_url, authorization_url)
+	time.Sleep(2 * time.Second)
 }
 
 func getNonce() string {
