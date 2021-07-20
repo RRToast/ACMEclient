@@ -24,7 +24,7 @@ func main() {
 		_, authorization_url, finalizeURL := newCertificate("https://192.168.1.2:14000/order-plz", account_url) // Create Order
 		secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
 		authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge
-		time.Sleep(10 * time.Second)                                                                            // rest to let server update order Status
+		// time.Sleep(10 * time.Second)                                                                            // rest to let server update order Status
 		waitForServerToUpdateStatus(account_url, authorization_url)
 		//TODO pooling verwenden
 		makeCSRRequest(account_url, dns, finalizeURL)                       // request a Certifikat using CSR
@@ -35,9 +35,11 @@ func main() {
 }
 
 func waitForServerToUpdateStatus(account_url string, authorization_url string) {
-	// valid := false
-	checkIfStatusValid(account_url, authorization_url)
-	time.Sleep(2 * time.Second)
+	valid := false
+	for !valid {
+		valid = checkIfStatusValid(account_url, authorization_url)
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func getNonce() string {
