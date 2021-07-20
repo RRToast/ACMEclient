@@ -36,7 +36,7 @@ func main() {
 
 func waitForServerToUpdateStatus(account_url string, authorization_url string) {
 	// valid := false
-	authChallenge(account_url, authorization_url)
+	checkIfStatusValid(account_url, authorization_url)
 	time.Sleep(2 * time.Second)
 }
 
