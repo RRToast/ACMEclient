@@ -88,7 +88,7 @@ func newAccount(signMeUpURL string) (account_url string, order_list_url string) 
 	return resp.Header.Get("Location"), trimQuote(string(m["orders"]))
 }
 
-func newCertificate(request_url string, account_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
+func newCertificate(account_url string, request_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
 	println("auth_order_url: ", request_url)
 	EkValue, AkValue, tpmm := getAttestAndEndorseKey()
 	globAk = AkValue
@@ -181,7 +181,7 @@ func getCertificate(account_url string) (order_url string) {
 	return trimQuote(string(m["orders"]))
 }
 
-func downloadCertificate(order_url string, account_url string) (new_order_url string) {
+func downloadCertificate(account_url string, order_url string) (new_order_url string) {
 	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
@@ -205,7 +205,7 @@ func downloadCertificate(order_url string, account_url string) (new_order_url st
 
 }
 
-func downloadCertificate2(order_url string, account_url string) (certificate_url string) {
+func downloadCertificate2(account_url string, order_url string) (certificate_url string) {
 	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
@@ -226,7 +226,7 @@ func downloadCertificate2(order_url string, account_url string) (certificate_url
 
 }
 
-func downloadCertificate3(certificate_url string, account_url string) {
+func downloadCertificate3(account_url string, certificate_url string) {
 	println("Certificate URL: ", certificate_url)
 	// GET as POST request
 	byts := []byte{}
@@ -382,6 +382,9 @@ func solveEkSecret(Credentail string, Secret string) (secret string) {
 }
 
 func (n dummyNonceSource) Nonce() (string, error) {
+	if globNonce != "" {
+		return globNonce, nil
+	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -390,9 +393,6 @@ func (n dummyNonceSource) Nonce() (string, error) {
 	res, err := client.Head("https://192.168.1.2:14000/nonce-plz")
 	if err != nil {
 		panic(err)
-	}
-	if globNonce != "" {
-		return globNonce, nil
 	}
 	ua := res.Header.Get("Replay-Nonce")
 	return ua, nil
