@@ -13,8 +13,8 @@ type Message struct {
 
 func main() {
 	println("start")
-	account_url, order_list_url := newAccount("https://192.168.1.2:14000/sign-me-up")                       // Create Account
-	_, authorization_url, finalizeURL := newCertificate(account_url, "https://192.168.1.2:14000/order-plz") // Create Order
+	account_url, order_list_url := newAccount("https://192.168.1.8:14000/sign-me-up")                       // Create Account
+	_, authorization_url, finalizeURL := newCertificate(account_url, "https://192.168.1.8:14000/order-plz") // Create Order
 	secret, answer_url, dns := authChallenge(account_url, authorization_url)                                // Get(Request) Challenge
 	authChallengeAnswer(account_url, answer_url, secret)                                                    // answer Challenge
 	waitForServerToUpdateStatus(account_url, authorization_url)                                             // rest to let server update order Status

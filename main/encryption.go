@@ -390,7 +390,7 @@ func (n dummyNonceSource) Nonce() (string, error) {
 	}
 	client := &http.Client{Transport: tr}
 
-	res, err := client.Head("https://192.168.1.2:14000/nonce-plz")
+	res, err := client.Head("https://192.168.1.8:14000/nonce-plz")
 	if err != nil {
 		panic(err)
 	}
