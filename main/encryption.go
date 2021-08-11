@@ -205,7 +205,7 @@ func downloadCertificate(account_url string, order_url string) (new_order_url st
 
 }
 
-func downloadCertificate2(account_url string, order_url string) (certificate_url string) {
+func makeCertificate(account_url string, order_url string) (certificate_url string) {
 	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
@@ -226,7 +226,7 @@ func downloadCertificate2(account_url string, order_url string) (certificate_url
 
 }
 
-func downloadCertificate3(account_url string, certificate_url string) {
+func requestCertificate(account_url string, certificate_url string) {
 	println("Certificate URL: ", certificate_url)
 	// GET as POST request
 	byts := []byte{}
