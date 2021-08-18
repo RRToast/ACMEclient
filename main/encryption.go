@@ -371,6 +371,9 @@ func solveEkSecret(Credentail string, Secret string) (secret string) {
 
 	tes, _ := globAk.Marshal()
 	tess, _ := tpm.LoadAK(tes)
+	tessValue, _ := tess.Marshal()
+	println("tess: ", string(tessValue))
+	println("globAK: ", string(tes))
 
 	bsecret, err := tess.ActivateCredential(tpm, cred)
 
