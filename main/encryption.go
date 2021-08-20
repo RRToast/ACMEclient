@@ -127,7 +127,7 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 	byts := []byte{}
 	body, _ := sendRequest(auth_order_url, authorization_url, byts)
 	println("authChallenge: GET-as-POST request to retreive challange details")
-	//println("HTTP result body: ", string(body))
+	println("HTTP result body AUTH CHallenge: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
