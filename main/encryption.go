@@ -101,7 +101,7 @@ func newCertificate(account_url string, request_url string) (auth_order_url stri
 
 	body, resp := sendRequest(account_url, request_url, byts)
 	println("newCertificate: New Certificate requested!")
-	// println("HTTP result body: ", string(body))
+	println("HTTP result body auf New Certifikate Anfrage: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -369,11 +369,8 @@ func solveEkSecret(Credentail string, Secret string) (secret string) {
 	config := &attest.OpenConfig{}
 	tpm, err := attest.OpenTPM(config)
 
-	tes, _ := globAk.Marshal()
-	tess, _ := tpm.LoadAK(tes)
-	tessValue, _ := tess.Marshal()
-	println("tess: ", string(tessValue))
-	println("globAK: ", string(tes))
+	tes, _ := globAk.Marshal() // attest.AK
+	tess, _ := tpm.LoadAK(tes) // *attest.Ak
 
 	bsecret, err := tess.ActivateCredential(tpm, cred)
 
