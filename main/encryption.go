@@ -68,14 +68,11 @@ func newAccount(signMeUpURL string) (account_url string, order_list_url string) 
 		panic(err)
 	}
 	defer resp.Body.Close()
-	println("HTTP result status: ", resp.Status)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		println(err.Error())
 		panic(err)
 	}
-	// println("HTTP result header:", string(resp.Header.Get("Location")))
-	// println("HTTP result body: ", string(body))
 	m := make(map[string]json.RawMessage)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
@@ -89,7 +86,6 @@ func newAccount(signMeUpURL string) (account_url string, order_list_url string) 
 }
 
 func newCertificate(account_url string, request_url string) (auth_order_url string, authorizations_url string, finalizeURL string) {
-	println("auth_order_url: ", request_url)
 	EkValue, AkValue, tpmm := getAttestAndEndorseKey()
 	globAk = AkValue
 	globTPM = tpmm
@@ -101,7 +97,6 @@ func newCertificate(account_url string, request_url string) (auth_order_url stri
 
 	body, resp := sendRequest(account_url, request_url, byts)
 	println("newCertificate: New Certificate requested!")
-	println("HTTP result body auf New Certifikate Anfrage: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -121,13 +116,11 @@ func newCertificate(account_url string, request_url string) (auth_order_url stri
 }
 
 func authChallenge(auth_order_url string, authorization_url string) (secret string, answerUrl string, dns string) {
-	println("authorization_url: ", authorization_url)
 	// GET as POST request
 
 	byts := []byte{}
 	body, _ := sendRequest(auth_order_url, authorization_url, byts)
 	println("authChallenge: GET-as-POST request to retreive challange details")
-	println("HTTP result body AUTH CHallenge: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -140,36 +133,30 @@ func authChallenge(auth_order_url string, authorization_url string) (secret stri
 }
 
 func authChallengeAnswer(auth_order_url string, answer_url string, secret string) {
-	println("answer_url: ", answer_url)
 	payload := map[string]interface{}{"status": "valid", "secret": secret}
 	byts, _ := json.Marshal(payload)
 
 	sendRequest(auth_order_url, answer_url, byts)
 	println("authChallengeAnswer: Challenge answer was send!")
-	// println("HTTP result body: ", string(body))
 	println("")
 
 }
 
 func makeCSRRequest(auth_order_url string, dns string, finalizeURL string) {
-	println("finalizeURL: ", finalizeURL)
 	payload := map[string]interface{}{"csr": teeeestcreateCSR(dns)}
 	byts, _ := json.Marshal(payload)
 
 	sendRequest(auth_order_url, finalizeURL, byts)
 	println("makeCSRRequest: CSR Request send!")
-	// println("HTTP result body: ", string(body))
 	println("")
 }
 
 func getCertificate(account_url string) (order_url string) {
-	println("account_url: ", account_url)
 	// GET as POST request
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, account_url, byts)
 	println("getCertificate: GET-as-POST request for the Certificate!")
-	// println("HTTP result body: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -182,13 +169,11 @@ func getCertificate(account_url string) (order_url string) {
 }
 
 func downloadCertificate(account_url string, order_url string) (new_order_url string) {
-	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("downloadCertificate: 1 iteration")
-	// println("HTTP result body: ", string(body))
+	println("downloadCertificate: get Certificate URL")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -206,13 +191,11 @@ func downloadCertificate(account_url string, order_url string) (new_order_url st
 }
 
 func makeCertificate(account_url string, order_url string) (certificate_url string) {
-	println("order_url: ", order_url)
 	// GET as POST request
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, order_url, byts)
-	println("downloadCertificate: 2 iteration")
-	// println("HTTP result body: ", string(body))
+	println("downloadCertificate: Get URL")
 	println("")
 
 	m := make(map[string]json.RawMessage)
@@ -227,13 +210,11 @@ func makeCertificate(account_url string, order_url string) (certificate_url stri
 }
 
 func requestCertificate(account_url string, certificate_url string) {
-	println("Certificate URL: ", certificate_url)
 	// GET as POST request
 	byts := []byte{}
 
 	body, _ := sendRequest(account_url, certificate_url, byts)
 	println("GET as POST request to retreive Certificate")
-	// println("HTTP result body: ", string(body))
 	println("")
 
 	err := ioutil.WriteFile("Certificate", body, 0644)
@@ -244,13 +225,11 @@ func requestCertificate(account_url string, certificate_url string) {
 }
 
 func checkIfStatusValid(auth_order_url string, authorization_url string) (valid bool) {
-	println("authorization_url: ", authorization_url)
 	// GET as POST request
 
 	byts := []byte{}
 	body, _ := sendRequest(auth_order_url, authorization_url, byts)
 	println("authChallenge: GET-as-POST request to retreive challange details")
-	//println("HTTP result body: ", string(body))
 	println("")
 
 	m := make(map[string]json.RawMessage)
