@@ -7,9 +7,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/pem"
 	"io/ioutil"
-	"os"
 
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -150,7 +148,7 @@ func teeeestcreateCSR(dns string) (csr string) {
 		glog.Fatalf("Failed to create CSR: %s", err)
 	}
 
-	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	// pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 	v2 := base64.RawURLEncoding.EncodeToString(csrBytes)
 	return v2
 
